@@ -1,0 +1,78 @@
+<!-- pages/distribution/promotion-code/promotion-code.wxml -->
+<view class="page-container">
+  <!-- 顶部提示区 -->
+  <view class="tip-section">
+    <view class="tip-icon">💡</view>
+    <text class="tip-text">分享您的专属推广码，好友扫码即可绑定关系，享受佣金收益</text>
+  </view>
+
+  <!-- 推广码卡片 -->
+  <view class="qrcode-card">
+    <view class="card-header">
+      <text class="card-title">我的推广码</text>
+      <text class="card-subtitle">ID: {{promotionCode.userId}}</text>
+    </view>
+    
+    <view class="qrcode-wrapper">
+      <canvas class="qrcode-canvas" canvas-id="qrcodeCanvas" style="width: 400rpx; height: 400rpx;"></canvas>
+      <image class="qrcode-image" src="{{qrcodeImageUrl}}" mode="aspectFit" wx:if="{{qrcodeImageUrl}}"></image>
+      <view class="qrcode-placeholder" wx:else>
+        <text class="placeholder-icon">📱</text>
+        <text class="placeholder-text">推广码生成中...</text>
+      </view>
+    </view>
+
+    <view class="card-footer">
+      <text class="footer-text">长按保存图片或截图分享</text>
+    </view>
+  </view>
+
+  <!-- 分享链接区 -->
+  <view class="share-link-section">
+    <view class="section-title">分享链接</view>
+    <view class="link-box">
+      <text class="link-text">{{shareLink}}</text>
+      <button class="copy-btn" bindtap="copyShareLink">复制</button>
+    </view>
+  </view>
+
+  <!-- 快捷分享按钮区 -->
+  <view class="share-actions">
+    <button class="share-btn wechat" bindtap="shareToWechat">
+      <text class="btn-icon">💬</text>
+      <text class="btn-text">微信好友</text>
+    </button>
+    <button class="share-btn moments" bindtap="shareToMoments">
+      <text class="btn-icon">🌟</text>
+      <text class="btn-text">朋友圈</text>
+    </button>
+    <button class="share-btn save" bindtap="saveToAlbum">
+      <text class="btn-icon"></text>
+      <text class="btn-text">保存图片</text>
+    </button>
+  </view>
+
+  <!-- 推广数据统计 -->
+  <view class="promo-stats-section">
+    <view class="section-title">推广数据</view>
+    <view class="stats-row">
+      <view class="stat-item">
+        <text class="stat-num">{{promoStats.scanCount}}</text>
+        <text class="stat-label">扫码次数</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-num">{{promoStats.bindCount}}</text>
+        <text class="stat-label">绑定人数</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-num">{{promoStats.orderCount}}</text>
+        <text class="stat-label">成交订单</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部提示 -->
+  <view class="bottom-tip">
+    <text class="tip-content">⚠️ 推广码长期有效，分享给好友即可开始赚取佣金</text>
+  </view>
+</view>

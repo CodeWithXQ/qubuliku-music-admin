@@ -1,0 +1,82 @@
+<!--pages/distribution/balance-log/balance-log.wxml-->
+<view class="page-container">
+  
+  <!-- 储值金余额概览 -->
+  <view class="balance-overview">
+    <view class="balance-header">
+      <text class="balance-label">可用余额（元）</text>
+    </view>
+    <view class="balance-amount">{{balanceInfo.available}}</view>
+    <view class="balance-stats">
+      <view class="stat-item">
+        <text class="stat-label">累计入账</text>
+        <text class="stat-value">¥{{balanceInfo.totalCommission}}</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-label">已使用</text>
+        <text class="stat-value">¥{{balanceInfo.used}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- Tab筛选 -->
+  <view class="tab-bar">
+    <view 
+      class="tab-item {{currentTab === item.key ? 'active' : ''}}" 
+      wx:for="{{tabs}}" 
+      wx:key="key"
+      bindtap="switchTab"
+      data-tab="{{item.key}}"
+    >
+      <text class="tab-text">{{item.name}}</text>
+    </view>
+  </view>
+
+  <!-- 流水记录列表 -->
+  <view class="log-list" wx:if="{{logList.length > 0}}">
+    <view class="log-item" wx:for="{{logList}}" wx:key="id">
+      <!-- 时间轴节点 -->
+      <view class="log-timeline">
+        <view class="timeline-dot {{item.type}}"></view>
+        <view class="timeline-line" wx:if="{{index < logList.length - 1}}"></view>
+      </view>
+      
+      <!-- 记录内容 -->
+      <view class="log-content">
+        <view class="log-header">
+          <text class="log-type {{item.type}}">{{item.typeName}}</text>
+          <text class="log-time">{{item.time}}</text>
+        </view>
+        
+        <view class="log-body">
+          <view class="log-info">
+            <text class="log-remark">{{item.remark}}</text>
+            <text class="log-source">来源：{{item.source}}</text>
+          </view>
+          <view class="log-amount-wrapper">
+            <text class="log-amount {{item.type === 'income' ? 'income' : 'expense'}}">{{item.amount}}</text>
+            <text class="log-balance">余额 ¥{{item.balanceAfter}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:else>
+    <text class="empty-icon"></text>
+    <text class="empty-text">暂无储值明细记录</text>
+  </view>
+
+  <!-- 加载提示 -->
+  <view class="loading-tip" wx:if="{{loading}}">
+    <text>加载中...</text>
+  </view>
+
+  <!-- 没有更多 -->
+  <view class="no-more" wx:if="{{!hasMore && logList.length > 0}}">
+    <text>— 没有更多记录了 —</text>
+  </view>
+
+</view>

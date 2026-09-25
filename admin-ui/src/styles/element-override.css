@@ -1,0 +1,60 @@
+/* ============ Element Plus 组件样式覆盖 ============ */
+
+/* 侧边栏菜单覆盖 */
+.el-menu {
+  border-right: none !important;
+}
+
+.el-menu-item {
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+.el-menu-item.is-active {
+  background: var(--sidebar-active) !important;
+  color: #fff !important;
+}
+
+/* 表格覆盖 */
+.el-table th.el-table__cell {
+  background: var(--gray-50);
+  color: var(--gray-600);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.3px;
+}
+
+/* 卡片覆盖 */
+.el-card {
+  border-radius: var(--card-radius);
+  box-shadow: var(--card-shadow);
+  border: 1px solid rgba(0, 0, 0, 0.02);
+}
+
+/* 分页覆盖 */
+.el-pagination {
+  justify-content: flex-end;
+}
+
+/* 弹窗覆盖 */
+.el-dialog {
+  border-radius: 14px;
+}
+
+.el-dialog__header {
+  font-weight: 700;
+  font-size: 17px;
+}
+
+/* 输入框覆盖 */
+.el-input__wrapper {
+  box-shadow: 0 0 0 1px var(--gray-300) inset;
+}
+
+.el-input__wrapper:hover {
+  box-shadow: 0 0 0 1px var(--gray-400) inset;
+}
+
+.el-input.is-focus .el-input__wrapper {
+  box-shadow: 0 0 0 2px var(--primary) inset !important;
+}

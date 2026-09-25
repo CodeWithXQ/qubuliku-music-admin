@@ -1,0 +1,90 @@
+/* pages/login — 暖白浅色·手机号登录 */
+
+.login {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: 120rpx 36rpx 48rpx;
+  background: linear-gradient(180deg, #f9f7f0 0%, #f5f3ea 40%, #f0efe8 100%);
+}
+
+/* ---- 品牌 ---- */
+.login-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-bottom: 56rpx;
+}
+.login-logo {
+  width: 120rpx; height: 120rpx;
+  border-radius: 28rpx;
+  box-shadow: 0 4rpx 24rpx rgba(0,0,0,0.08);
+}
+.login-name {
+  font-size: 48rpx; font-weight: 700; color: #2c2416;
+  margin-top: 28rpx; letter-spacing: 6rpx;
+}
+.login-desc {
+  font-size: 26rpx; color: #9b8e7a;
+  margin-top: 12rpx; letter-spacing: 2rpx;
+}
+
+/* ---- 卡片 ---- */
+.login-card {
+  width: 100%;
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 40rpx 32rpx;
+  box-shadow: 0 2rpx 20rpx rgba(0,0,0,0.05);
+}
+
+/* ---- 手机号表单 ---- */
+.login-phone {
+  display: flex;
+  flex-direction: column;
+  gap: 14rpx;
+}
+.login-input {
+  width: 100%; height: 88rpx;
+  background: #f7f5f0; border-radius: 14rpx;
+  padding: 0 22rpx; font-size: 28rpx; color: #3d3629;
+  box-sizing: border-box;
+}
+.login-phone-row {
+  display: flex; gap: 12rpx;
+}
+.login-code {
+  flex: 1;
+}
+
+/* 获取验证码 */
+.login-sms-btn {
+  width: 160rpx; height: 88rpx;
+  background: #2c2416; color: #fcf1c0;
+  font-size: 24rpx; font-weight: 500;
+  border-radius: 14rpx;
+  display: flex; align-items: center; justify-content: center;
+  line-height: 1; flex-shrink: 0;
+}
+.login-sms-btn:active { opacity: 0.85; }
+.login-sms-btn--disabled {
+  background: #e0dcd3; color: #b8b0a0;
+}
+
+/* 登录 */
+.login-btn-phone {
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; height: 88rpx;
+  background: #2c2416; color: #fcf1c0;
+  font-size: 30rpx; font-weight: 600;
+  border-radius: 14rpx; line-height: 1;
+}
+.login-btn-phone:active { opacity: 0.85; }
+
+/* ---- 协议 ---- */
+.login-agree {
+  display: flex; align-items: center; justify-content: center;
+  padding-top: 36rpx; font-size: 22rpx; color: #bfb8a8;
+}
+.login-agree-link { color: #8b7a5e; }

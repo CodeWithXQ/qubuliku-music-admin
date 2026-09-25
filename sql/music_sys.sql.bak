@@ -1,0 +1,698 @@
+-- ============================================================
+-- 曲不离库 · 音乐后台智能管理系统 — 完整数据库建表脚本
+-- 版本: 1.0.0
+-- 数据库: MySQL 8.0+
+-- 字符集: utf8mb4
+-- 对齐: 前端 admin-ui (Vue3 + TypeScript) 已实现的数据模型
+-- ============================================================
+
+DROP DATABASE IF EXISTS music_sys;
+CREATE DATABASE music_sys CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE music_sys;
+
+-- ============================================================
+-- 第一部分：系统权限模块 (RBAC)
+-- ============================================================
+
+-- 1. 后台管理员
+CREATE TABLE sys_user (
+    id              BIGINT          PRIMARY KEY AUTO_INCREMENT  COMMENT '管理员ID',
+    username        VARCHAR(50)     NOT NULL UNIQUE             COMMENT '登录名',
+    password        VARCHAR(255)    NOT NULL                    COMMENT '加密密码(BCrypt)',
+    avatar          TEXT            DEFAULT NULL                COMMENT '头像(支持dataURI)',
+    real_name       VARCHAR(50)     DEFAULT NULL                COMMENT '真实姓名',
+    employee_id     VARCHAR(20)     DEFAULT NULL                COMMENT '工号',
+    position        VARCHAR(50)     DEFAULT NULL                COMMENT '职务',
+    department      VARCHAR(50)     DEFAULT NULL                COMMENT '所属部门',
+    phone           VARCHAR(20)     DEFAULT NULL                COMMENT '手机号',
+    status          TINYINT         NOT NULL DEFAULT 1          COMMENT '账号状态: 0禁用 / 1正常 / 2待激活',
+    last_login_ip   VARCHAR(50)     DEFAULT NULL                COMMENT '最后登录IP',
+    last_login_time DATETIME        DEFAULT NULL                COMMENT '最后登录时间',
+    created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_sys_user_status (status),
+    INDEX idx_sys_user_department (department)
+) ENGINE=InnoDB COMMENT='后台管理员';
+
+-- 2. 角色表
+CREATE TABLE sys_role (
+    id              BIGINT          PRIMARY KEY AUTO_INCREMENT  COMMENT '角色ID',
+    role_code       VARCHAR(30)     NOT NULL UNIQUE             COMMENT '角色编码(admin/editor/auditor)',
+    role_name       VARCHAR(50)     NOT NULL                    COMMENT '角色名称',
+    description     VARCHAR(200)    DEFAULT NULL                COMMENT '角色描述',
+    status          TINYINT         NOT NULL DEFAULT 1          COMMENT '状态: 0禁用 / 1正常',
+    created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB COMMENT='RBAC角色';
+
+-- 3. 权限表
+CREATE TABLE sys_permission (
+    id              BIGINT          PRIMARY KEY AUTO_INCREMENT  COMMENT '权限ID',
+    perm_code       VARCHAR(50)     NOT NULL UNIQUE             COMMENT '权限编码(dashboard:view等)',
+    perm_name       VARCHAR(50)     NOT NULL                    COMMENT '权限名称',
+    perm_type       TINYINT         NOT NULL DEFAULT 0          COMMENT '类型: 0菜单 / 1按钮 / 2接口',
+    parent_id       BIGINT          DEFAULT NULL                COMMENT '上级权限ID(树形)',
+    path            VARCHAR(100)    DEFAULT NULL                COMMENT '对应路由或接口路径',
+    created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_perm_parent (parent_id),
+    CONSTRAINT fk_perm_parent FOREIGN KEY (parent_id) REFERENCES sys_permission(id) ON DELETE SET NULL
+) ENGINE=InnoDB COMMENT='RBAC权限';
+
+-- 4. 用户-角色关联
+CREATE TABLE sys_user_role (
+    id              BIGINT          PRIMARY KEY AUTO_INCREMENT,
+    user_id         BIGINT          NOT NULL,
+    role_id         BIGINT          NOT NULL,
+    UNIQUE KEY uk_user_role (user_id, role_id),
+    CONSTRAINT fk_ur_user FOREIGN KEY (user_id) REFERENCES sys_user(id) ON DELETE CASCADE,
+    CONSTRAINT fk_ur_role FOREIGN KEY (role_id) REFERENCES sys_role(id) ON DELETE CASCADE
+) ENGINE=InnoDB COMMENT='用户角色关联';
+
+-- 5. 角色-权限关联
+CREATE TABLE sys_role_permission (
+    id              BIGINT          PRIMARY KEY AUTO_INCREMENT,
+    role_id         BIGINT          NOT NULL,
+    perm_id         BIGINT          NOT NULL,
+    UNIQUE KEY uk_role_perm (role_id, perm_id),
+    CONSTRAINT fk_rp_role FOREIGN KEY (role_id) REFERENCES sys_role(id) ON DELETE CASCADE,
+    CONSTRAINT fk_rp_perm FOREIGN KEY (perm_id) REFERENCES sys_permission(id) ON DELETE CASCADE
+) ENGINE=InnoDB COMMENT='角色权限关联';
+
+-- ============================================================
+-- 第二部分：核心业务模块
+-- ============================================================
+
+-- 6. 歌手表
+CREATE TABLE singer (
+    id              BIGINT          PRIMARY KEY AUTO_INCREMENT  COMMENT '歌手ID',
+    name            VARCHAR(100)    NOT NULL                    COMMENT '歌手名称',
+    avatar          TEXT            DEFAULT NULL                COMMENT '头像(支持dataURI)',
+    style           VARCHAR(20)     DEFAULT NULL                COMMENT '音乐风格: 流行/摇滚/电子/民谣/嘻哈/古典',
+    cert_status     TINYINT         NOT NULL DEFAULT 0          COMMENT '认证状态: 0入驻中 / 1待认证 / 2已认证',
+    intro           TEXT            DEFAULT NULL                COMMENT '歌手简介',
+    social_links    TEXT            DEFAULT NULL                COMMENT '社交媒体链接(逗号分隔)',
+    song_count      INT             NOT NULL DEFAULT 0          COMMENT '作品数量(冗余)',
+    follower_count  INT             NOT NULL DEFAULT 0          COMMENT '粉丝数量(冗余)',
+    created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_singer_style (style),
+    INDEX idx_singer_cert (cert_status),
+    INDEX idx_singer_name (name)
+) ENGINE=InnoDB COMMENT='歌手';
+
+-- 7. 歌曲表
+CREATE TABLE song (
+    id              BIGINT          PRIMARY KEY AUTO_INCREMENT  COMMENT '歌曲ID',
+    title           VARCHAR(200)    NOT NULL                    COMMENT '歌曲名称',
+    singer_id       BIGINT          NOT NULL                    COMMENT '歌手ID',
+    album           VARCHAR(200)    DEFAULT NULL                COMMENT '所属专辑',
+    style           VARCHAR(20)     DEFAULT NULL                COMMENT '音乐风格',
+    duration        INT             DEFAULT NULL                COMMENT '时长(秒)',
+    isrc            VARCHAR(50)     DEFAULT NULL                COMMENT 'ISRC编码',
+    cover_url       VARCHAR(255)    DEFAULT NULL                COMMENT '封面URL',
+    audio_url       VARCHAR(255)    DEFAULT NULL                COMMENT '音频文件URL',
+    lyric           TEXT            DEFAULT NULL                COMMENT '歌词',
+    play_count      BIGINT          NOT NULL DEFAULT 0          COMMENT '总播放量(冗余)',
+    audit_status    TINYINT         NOT NULL DEFAULT 0          COMMENT '审核状态: 0待审核 / 1审核通过 / 2已驳回 / 3已上架 / 4已下架',
+    auditor_id      BIGINT          DEFAULT NULL                COMMENT '审核人ID',
+    audit_time      DATETIME        DEFAULT NULL                COMMENT '审核时间',
+    audit_remark    VARCHAR(500)    DEFAULT NULL                COMMENT '审核备注/驳回原因',
+    audio_fingerprint VARCHAR(100)  DEFAULT NULL                COMMENT '音频指纹',
+    release_date    DATE            DEFAULT NULL                COMMENT '发行日期',
+    created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_song_singer (singer_id),
+    INDEX idx_song_style (style),
+    INDEX idx_song_audit (audit_status),
+    INDEX idx_song_title (title),
+    INDEX idx_song_play (play_count DESC),
+    INDEX idx_song_release (release_date),
+    CONSTRAINT fk_song_singer FOREIGN KEY (singer_id) REFERENCES singer(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_song_auditor FOREIGN KEY (auditor_id) REFERENCES sys_user(id) ON DELETE SET NULL
+) ENGINE=InnoDB COMMENT='歌曲';
+
+-- 8. 歌曲版权表 (与歌曲一对一)
+CREATE TABLE song_copyright (
+    id                BIGINT        PRIMARY KEY AUTO_INCREMENT  COMMENT '版权ID',
+    song_id           BIGINT        NOT NULL UNIQUE             COMMENT '歌曲ID(一对一)',
+    lyric_author      VARCHAR(100)  DEFAULT NULL                COMMENT '作词人',
+    composer          VARCHAR(100)  DEFAULT NULL                COMMENT '作曲人',
+    copyright_company VARCHAR(200)  DEFAULT NULL                COMMENT '版权公司',
+    license_start     DATE          DEFAULT NULL                COMMENT '授权开始日期',
+    license_end       DATE          DEFAULT NULL                COMMENT '授权结束日期',
+    status            TINYINT       NOT NULL DEFAULT 0          COMMENT '版权状态: 0待录入 / 1已授权 / 2即将到期 / 3已过期',
+    created_at        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_copyright_status (status),
+    INDEX idx_copyright_expire (license_end),
+    CONSTRAINT fk_copyright_song FOREIGN KEY (song_id) REFERENCES song(id) ON DELETE CASCADE
+) ENGINE=InnoDB COMMENT='歌曲版权信息';
+
+-- 9. 歌单表
+CREATE TABLE playlist (
+    id              BIGINT          PRIMARY KEY AUTO_INCREMENT  COMMENT '歌单ID',
+    name            VARCHAR(200)    NOT NULL                    COMMENT '歌单名称',
+    cover_url       VARCHAR(255)    DEFAULT NULL                COMMENT '封面URL',
+    description     TEXT            DEFAULT NULL                COMMENT '歌单描述',
+    type            TINYINT         NOT NULL DEFAULT 0          COMMENT '类型: 0官方歌单 / 1用户歌单',
+    creator_id      BIGINT          DEFAULT NULL                COMMENT '创建者ID',
+    creator_name    VARCHAR(50)     DEFAULT NULL                COMMENT '创建者名称(冗余)',
+    status          TINYINT         NOT NULL DEFAULT 0          COMMENT '状态: 0待审核 / 1已发布 / 2已驳回 / 3已下架',
+    publish_time    DATETIME        DEFAULT NULL                COMMENT '发布时间',
+    is_pinned       TINYINT         NOT NULL DEFAULT 0          COMMENT '置顶: 0否 / 1是',
+    song_count      INT             NOT NULL DEFAULT 0          COMMENT '歌曲数量(冗余)',
+    favorite_count  INT             NOT NULL DEFAULT 0          COMMENT '收藏数量(冗余)',
+    play_count      BIGINT          NOT NULL DEFAULT 0          COMMENT '播放总量(冗余)',
+    created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_playlist_type (type),
+    INDEX idx_playlist_status (status),
+    INDEX idx_playlist_pinned (is_pinned),
+    INDEX idx_playlist_name (name),
+    CONSTRAINT fk_playlist_creator FOREIGN KEY (creator_id) REFERENCES sys_user(id) ON DELETE SET NULL
+) ENGINE=InnoDB COMMENT='歌单';
+
+-- 10. 歌单-歌曲关联表 (多对多)
+CREATE TABLE playlist_song (
+    id              BIGINT          PRIMARY KEY AUTO_INCREMENT,
+    playlist_id     BIGINT          NOT NULL,
+    song_id         BIGINT          NOT NULL,
+    sort_order      INT             NOT NULL DEFAULT 0          COMMENT '排序序号',
+    created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_playlist_song (playlist_id, song_id),
+    INDEX idx_ps_song (song_id),
+    CONSTRAINT fk_ps_playlist FOREIGN KEY (playlist_id) REFERENCES playlist(id) ON DELETE CASCADE,
+    CONSTRAINT fk_ps_song FOREIGN KEY (song_id) REFERENCES song(id) ON DELETE CASCADE
+) ENGINE=InnoDB COMMENT='歌单歌曲关联';
+
+-- ============================================================
+-- 第三部分：终端用户模块
+-- ============================================================
+
+-- 11. 终端用户表
+CREATE TABLE app_user (
+    id              BIGINT          PRIMARY KEY AUTO_INCREMENT  COMMENT '用户ID',
+    nickname        VARCHAR(50)     DEFAULT NULL                COMMENT '昵称',
+    phone           VARCHAR(20)     DEFAULT NULL UNIQUE         COMMENT '手机号(唯一)',
+    password        VARCHAR(255)    DEFAULT NULL                COMMENT '加密密码',
+    avatar          TEXT            DEFAULT NULL                COMMENT '头像(支持dataURI)',
+    user_type       TINYINT         NOT NULL DEFAULT 0          COMMENT '用户类型: 0普通用户 / 1VIP会员 / 2音乐人',
+    vip_expire      DATETIME        DEFAULT NULL                COMMENT 'VIP到期时间',
+    status          TINYINT         NOT NULL DEFAULT 1          COMMENT '账号状态: 0已禁用 / 1正常 / 2待激活',
+    favorite_count  INT             NOT NULL DEFAULT 0          COMMENT '收藏数量(冗余)',
+    playlist_count  INT             NOT NULL DEFAULT 0          COMMENT '歌单数量(冗余)',
+    registered_at   DATETIME        DEFAULT NULL                COMMENT '注册时间',
+    last_login_at   DATETIME        DEFAULT NULL                COMMENT '最后登录时间',
+    created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_app_user_type (user_type),
+    INDEX idx_app_user_status (status),
+    INDEX idx_app_user_phone (phone),
+    INDEX idx_app_user_register (registered_at)
+) ENGINE=InnoDB COMMENT='终端用户';
+
+-- 12. 用户收藏表
+CREATE TABLE user_favorite (
+    id              BIGINT          PRIMARY KEY AUTO_INCREMENT,
+    user_id         BIGINT          NOT NULL                    COMMENT '用户ID',
+    target_type     TINYINT         NOT NULL                    COMMENT '收藏类型: 0歌曲 / 1歌单 / 2歌手',
+    target_id       BIGINT          NOT NULL                    COMMENT '收藏目标ID',
+    created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_user_fav (user_id, target_type, target_id),
+    INDEX idx_fav_target (target_type, target_id),
+    CONSTRAINT fk_fav_user FOREIGN KEY (user_id) REFERENCES app_user(id) ON DELETE CASCADE
+) ENGINE=InnoDB COMMENT='用户收藏';
+
+-- ============================================================
+-- 第四部分：数据统计模块
+-- ============================================================
+
+-- 13. 歌曲每日播放统计
+CREATE TABLE song_play_stat (
+    id                BIGINT        PRIMARY KEY AUTO_INCREMENT,
+    song_id           BIGINT        NOT NULL,
+    play_date         DATE          NOT NULL                    COMMENT '统计日期',
+    play_count        BIGINT        NOT NULL DEFAULT 0          COMMENT '当日播放量',
+    unique_listeners  INT           NOT NULL DEFAULT 0          COMMENT '当日独立听众数',
+    UNIQUE KEY uk_song_date (song_id, play_date),
+    INDEX idx_sps_date (play_date),
+    CONSTRAINT fk_sps_song FOREIGN KEY (song_id) REFERENCES song(id) ON DELETE CASCADE
+) ENGINE=InnoDB COMMENT='歌曲每日播放统计';
+
+-- 14. 风格播放统计
+CREATE TABLE style_play_stat (
+    id              BIGINT          PRIMARY KEY AUTO_INCREMENT,
+    style           VARCHAR(20)     NOT NULL                    COMMENT '音乐风格',
+    stat_date       DATE            NOT NULL                    COMMENT '统计日期',
+    play_count      BIGINT          NOT NULL DEFAULT 0          COMMENT '当日播放量',
+    song_count      INT             NOT NULL DEFAULT 0          COMMENT '当日歌曲数',
+    UNIQUE KEY uk_style_date (style, stat_date),
+    INDEX idx_sps_style_date (stat_date)
+) ENGINE=InnoDB COMMENT='风格播放统计';
+
+-- ============================================================
+-- 第五部分：日志与审计模块
+-- ============================================================
+
+-- 15. 操作审计日志
+CREATE TABLE operation_log (
+    id              BIGINT          PRIMARY KEY AUTO_INCREMENT  COMMENT '日志ID',
+    operator_id     BIGINT          DEFAULT NULL                COMMENT '操作人ID',
+    operator_name   VARCHAR(50)     DEFAULT NULL                COMMENT '操作人姓名(冗余)',
+    ip_address      VARCHAR(50)     DEFAULT NULL                COMMENT '操作IP',
+    op_type         VARCHAR(20)     NOT NULL                    COMMENT '操作类型: ADD/EDIT/DELETE/LOGIN/AUDIT/EXPORT',
+    module          VARCHAR(30)     NOT NULL                    COMMENT '操作模块: 歌曲管理/歌手管理/歌单管理/用户管理/系统',
+    detail          VARCHAR(500)    DEFAULT NULL                COMMENT '操作详情',
+    result          TINYINT         NOT NULL DEFAULT 1          COMMENT '操作结果: 0失败 / 1成功',
+    fail_reason     VARCHAR(500)    DEFAULT NULL                COMMENT '失败原因',
+    request_params  TEXT            DEFAULT NULL                COMMENT '请求参数',
+    created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_log_operator (operator_id),
+    INDEX idx_log_type (op_type),
+    INDEX idx_log_module (module),
+    INDEX idx_log_result (result),
+    INDEX idx_log_time (created_at DESC),
+    CONSTRAINT fk_log_operator FOREIGN KEY (operator_id) REFERENCES sys_user(id) ON DELETE SET NULL
+) ENGINE=InnoDB COMMENT='操作审计日志';
+
+-- 16. 推荐引擎日志
+CREATE TABLE recommendation_log (
+    id              BIGINT          PRIMARY KEY AUTO_INCREMENT  COMMENT '日志ID',
+    user_id         BIGINT          NOT NULL                    COMMENT '用户ID',
+    song_id         BIGINT          NOT NULL                    COMMENT '推荐歌曲ID',
+    strategy        VARCHAR(50)     NOT NULL                    COMMENT '推荐策略: 协同过滤/内容推荐/热门推荐',
+    result          VARCHAR(20)     NOT NULL                    COMMENT '用户反馈: 点击/收藏/分享/忽略',
+    score           DECIMAL(5,4)    DEFAULT NULL                COMMENT '推荐评分(0~1)',
+    created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_rec_user (user_id),
+    INDEX idx_rec_song (song_id),
+    INDEX idx_rec_strategy (strategy),
+    INDEX idx_rec_time (created_at DESC),
+    CONSTRAINT fk_rec_user FOREIGN KEY (user_id) REFERENCES app_user(id) ON DELETE CASCADE,
+    CONSTRAINT fk_rec_song FOREIGN KEY (song_id) REFERENCES song(id) ON DELETE CASCADE
+) ENGINE=InnoDB COMMENT='推荐引擎日志';
+
+-- ============================================================
+-- 第六部分：初始化种子数据
+-- ============================================================
+
+-- 管理员账号 (密码: admin123, BCrypt加密; 头像SVG: data URI本地文字头像)
+INSERT INTO sys_user (id, username, password, avatar, real_name, employee_id, position, department, phone, status) VALUES
+(1, 'zhangmingyuan', '$2a$10$H8.l/2fH2gek1idBXncwUeGoqhFhC0B8U2rUovt0iMSKi3/Hxqi5u',
+'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzI1NjNFQiIgcng9IjMwIi8+PHRleHQgeD0iMTAwIiB5PSIxMzIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjkwIiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjZmZmIj7lvKA8L3RleHQ+PC9zdmc+',
+ '张明远', 'YY20240001', '技术总监', '技术研发部', '138****8888', 1),
+(2, 'wangxiaohua',  '$2a$10$H8.l/2fH2gek1idBXncwUeGoqhFhC0B8U2rUovt0iMSKi3/Hxqi5u',
+'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI0RCMjc3NyIgcng9IjMwIi8+PHRleHQgeD0iMTAwIiB5PSIxMzIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjkwIiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjZmZmIj7njos8L3RleHQ+PC9zdmc+',
+ '王小花', 'YY20240002', '内容编辑', '内容运营部', '139****6666', 1),
+(3, 'lishenwei',    '$2a$10$H8.l/2fH2gek1idBXncwUeGoqhFhC0B8U2rUovt0iMSKi3/Hxqi5u',
+'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzE2QTM0QSIgcng9IjMwIi8+PHRleHQgeD0iMTAwIiB5PSIxMzIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjkwIiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjZmZmIj7mnY48L3RleHQ+PC9zdmc+',
+ '李审委', 'YY20240003', '审核主管', '内容运营部', '136****7777', 1),
+(4, 'chenyun',      '$2a$10$H8.l/2fH2gek1idBXncwUeGoqhFhC0B8U2rUovt0iMSKi3/Hxqi5u',
+'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzdDM0FFRCIgcng9IjMwIi8+PHRleHQgeD0iMTAwIiB5PSIxMzIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjkwIiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjZmZmIj7pmYg8L3RleHQ+PC9zdmc+',
+ '陈芸',   'YY20240004', '运营编辑', '内容运营部', '135****5555', 1),
+(5, 'zhaolei',      '$2a$10$H8.l/2fH2gek1idBXncwUeGoqhFhC0B8U2rUovt0iMSKi3/Hxqi5u',
+'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI0VBNTgwQyIgcng9IjMwIi8+PHRleHQgeD0iMTAwIiB5PSIxMzIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjkwIiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjZmZmIj7otbU8L3RleHQ+PC9zdmc+',
+ '赵磊',   'YY20240005', '系统运维', '技术研发部', '133****3333', 1);
+
+-- 角色
+INSERT INTO sys_role (id, role_code, role_name, description) VALUES
+(1, 'admin',    '超级管理员', '拥有系统全部权限'),
+(2, 'editor',   '内容编辑',   '负责歌曲/歌手/歌单的内容管理'),
+(3, 'auditor',  '审核员',     '负责歌曲和歌单的审核工作');
+
+-- 权限
+INSERT INTO sys_permission (id, perm_code, perm_name, perm_type, parent_id, path) VALUES
+-- 菜单权限
+(1,  'dashboard:view',  '仪表盘查看',     0, NULL, '/dashboard'),
+(2,  'singer:list',     '歌手列表',        0, NULL, '/singers'),
+(3,  'singer:edit',     '歌手编辑',        1, 2,    NULL),
+(4,  'song:list',       '歌曲列表',        0, NULL, '/songs'),
+(5,  'song:audit',      '歌曲审核',        1, 4,    NULL),
+(6,  'playlist:list',   '歌单列表',        0, NULL, '/playlists'),
+(7,  'user:list',       '用户列表',        0, NULL, '/users'),
+(8,  'data:view',       '数据看板查看',    0, NULL, '/data'),
+(9,  'log:list',        '操作日志查看',    0, NULL, '/logs'),
+(10, 'playlist:audit',  '歌单审核',        1, 6,    NULL),
+(11, 'song:edit',       '歌曲编辑',        1, 4,    NULL),
+(12, 'playlist:edit',   '歌单编辑',        1, 6,    NULL),
+(13, 'singer:audit',    '歌手审核',        1, 2,    NULL);
+
+-- 用户-角色关联
+INSERT INTO sys_user_role (user_id, role_id) VALUES
+(1, 1), -- 张明远 → admin
+(2, 2), -- 王小花 → editor
+(3, 3), -- 李审委 → auditor
+(4, 2), -- 陈芸   → editor
+(5, 3); -- 赵磊   → auditor
+
+-- admin 角色拥有全部权限
+INSERT INTO sys_role_permission (role_id, perm_id) VALUES
+(1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8), (1, 9), (1, 10), (1, 11), (1, 12), (1, 13);
+
+-- editor 角色权限 (CRUD 内容管理, 不可审核/不可删除)
+INSERT INTO sys_role_permission (role_id, perm_id) VALUES
+(2, 1), (2, 2), (2, 3), (2, 4), (2, 6), (2, 7), (2, 8), (2, 11), (2, 12);
+
+-- auditor 角色权限 (审核 + 查看, 不可编辑)
+INSERT INTO sys_role_permission (role_id, perm_id) VALUES
+(3, 1), (3, 4), (3, 5), (3, 6), (3, 8), (3, 10), (3, 13);
+
+-- ============================================================
+-- 第七部分：示例数据 (可选，用于开发测试)
+-- ============================================================
+
+-- 示例歌手 (30位，6种风格)
+INSERT INTO singer (id, name, avatar, style, cert_status, intro, song_count, follower_count) VALUES
+-- 流行 (8位)
+(1,  '周杰伦',       'https://picsum.photos/seed/jaychou-singer/400/400',  '流行', 2, '华语乐坛天王，亚洲流行音乐风向标，多次获得金曲奖',          156, 8500000),
+(2,  '陈奕迅',       'https://picsum.photos/seed/easonchan-singer/400/400',  '流行', 2, '香港著名男歌手，以情歌见长，被誉为"歌神"接班人',              120, 6200000),
+(3,  '林俊杰',       'https://picsum.photos/seed/jjlin-singer/400/400',  '流行', 2, '新加坡创作型歌手，行走的CD，嗓音辨识度极高',                   98,  5100000),
+(4,  '邓紫棋',       'https://picsum.photos/seed/gemtang-singer/400/400',  '流行', 2, '新生代创作型女歌手，铁肺唱将，作品广受欢迎',                   65,  4800000),
+(5,  'Taylor Swift', 'https://picsum.photos/seed/taylorswift-music/400/400',  '流行', 2, '国际流行天后，11座格莱美奖得主，全球巡演场场爆满',             89,  9200000),
+(6,  '张惠妹',       'https://picsum.photos/seed/ameichang-singer/400/400',  '流行', 2, '华语乐坛实力天后，音域宽广，代表作传唱度极高',                 72,  3900000),
+(7,  '五月天',       'https://picsum.photos/seed/mayday-band/400/400',  '流行', 2, '台湾摇滚乐队转型流行，青春记忆代言人',                         88,  5600000),
+(8,  '陈粒',         'https://picsum.photos/seed/chenli-indie/400/400',  '流行', 1, '独立音乐人，曲风独特，深受文艺青年喜爱',                       36,  1200000),
+-- 摇滚 (5位)
+(9,  'Beyond',       'https://picsum.photos/seed/beyond-rock/400/400',  '摇滚', 2, '香港传奇摇滚乐队，华语摇滚先驱，经典不灭',                     58,  4100000),
+(10, 'Imagine Dragons', 'https://picsum.photos/seed/jaychou-singer/400/4000', '摇滚', 2, '美国独立摇滚乐队，全球流媒体播放量破百亿',                      42,  3800000),
+(11, 'Coldplay',     'https://picsum.photos/seed/jaychou-singer/400/4001', '摇滚', 2, '英国殿堂级乐队，歌词深刻旋律优美',                             56,  6200000),
+(12, '唐朝乐队',     'https://picsum.photos/seed/jaychou-singer/400/4002', '摇滚', 1, '中国重金属先驱，开创华语摇滚新纪元',                           25,  890000),
+(13, '新裤子',       'https://picsum.photos/seed/jaychou-singer/400/4003', '摇滚', 1, '中国新浪潮摇滚代表，乐队夏天人气王',                           32,  1500000),
+-- 民谣 (4位)
+(14, '赵雷',         'https://picsum.photos/seed/jaychou-singer/400/4004', '民谣', 2, '城市民谣代表歌手，用质朴歌词述说生活',                         28,  2100000),
+(15, '毛不易',       'https://picsum.photos/seed/jaychou-singer/400/4005', '民谣', 2, '创作才子，歌词深沉有思想，直击心灵',                           24,  2800000),
+(16, '宋冬野',       'https://picsum.photos/seed/jaychou-singer/400/4006', '民谣', 1, '用低沉的嗓音唱出生活的斑驳与沧桑',                             18,  1500000),
+(17, '房东的猫',     'https://picsum.photos/seed/jaychou-singer/400/4007', '民谣', 1, '清新治愈系二人组合，校园民谣新力量',                           20,  980000),
+-- 电子 (3位)
+(18, 'Alan Walker',  'https://picsum.photos/seed/jaychou-singer/400/4008', '电子', 2, '挪威电子音乐制作人，Faded让世界认识了他',                      45,  6800000),
+(19, 'Marshmello',   'https://picsum.photos/seed/jaychou-singer/400/4009', '电子', 2, '神秘电音制作人，标志性棉花糖头盔深入人心',                      52,  5500000),
+(20, 'Skrillex',     'https://picsum.photos/seed/easonchan-singer/400/4000', '电子', 1, 'Dubstep先驱，格莱美最佳电子/舞曲专辑获奖者',                  38,  3200000),
+-- R&B/嘻哈 (5位)
+(21, 'Beyoncé',      'https://picsum.photos/seed/easonchan-singer/400/4001', 'R&B',  2, '流行天后Queen B，格莱美历史上获奖最多的女性艺术家',            62,  8500000),
+(22, 'Drake',        'https://picsum.photos/seed/easonchan-singer/400/4002', '嘻哈', 2, '加拿大说唱歌手，流媒体时代商业最成功的说唱艺人',                78,  7200000),
+(23, '薛之谦',       'https://picsum.photos/seed/easonchan-singer/400/4003', 'R&B',  2, '唱作人，以深情旋律和独特声线著称',                             46,  3500000),
+(24, 'Kendrick Lamar','https://picsum.photos/seed/easonchan-singer/400/4004', '嘻哈', 2, '普利策音乐奖得主，用说唱表达社会思考',                         35,  4800000),
+(25, '潘玮柏',       'https://picsum.photos/seed/easonchan-singer/400/4005', '嘻哈', 1, '华语嘻哈领军人物，阳光活力舞台魅力十足',                        40,  1900000),
+-- 古典/爵士 (5位)
+(26, '郎朗',         'https://picsum.photos/seed/easonchan-singer/400/4006', '古典', 2, '国际钢琴大师，向世界展示中国古典音乐魅力',                     30,  2800000),
+(27, 'Norah Jones',  'https://picsum.photos/seed/easonchan-singer/400/4007', '爵士', 2, '美国爵士流行歌手，慵懒嗓音治愈人心',                           28,  3200000),
+(28, 'Diana Krall',  'https://picsum.photos/seed/easonchan-singer/400/4008', '爵士', 2, '加拿大爵士钢琴家兼歌手，格莱美级爵士女声',                     22,  1800000),
+(29, '李斯特室内乐团','https://picsum.photos/seed/easonchan-singer/400/4009', '古典', 1, '新锐室内乐团，专注古典音乐当代演绎',                           12,  450000),
+(30, '王若琳',       'https://picsum.photos/seed/wangruolin/400/400', '爵士', 1, '老派爵士唱腔，复古风格令人沉醉',                               15,  680000);
+
+-- 示例歌曲 (60首，覆盖5种审核状态，分布于30位歌手)
+INSERT INTO song (id, title, singer_id, album, style, duration, isrc, cover_url, lyric, play_count, audit_status, auditor_id, audit_time, release_date) VALUES
+-- === 已上架(3) — 35首 ===
+(1,  '晴天',           1,  '叶惠美',       '流行', 269, 'CN-A01-03-0012', 'https://picsum.photos/seed/song1/80/80',  '窗外的麻雀在电线杆上多嘴\n你说这一句很有夏天的感觉',                          85000000, 3, 1, NOW(), '2003-07-31'),
+(2,  '七里香',         1,  '七里香',       '流行', 301, 'CN-A01-04-0015', 'https://picsum.photos/seed/song2/80/80',  '窗外的麻雀在电线杆上多嘴',                                                       72000000, 3, 1, NOW(), '2004-08-03'),
+(3,  '夜曲',           1,  '十一月的萧邦',  '流行', 226, 'CN-A01-05-0020', 'https://picsum.photos/seed/song3/80/80',  '一群嗜血的蚂蚁被腐肉所吸引',                                                     68000000, 3, 1, NOW(), '2005-11-01'),
+(4,  '稻香',           1,  '魔杰座',       '流行', 234, 'CN-A01-08-0035', 'https://picsum.photos/seed/song4/80/80',  '对这个世界如果你有太多的抱怨\n跌倒了就不敢继续往前走',                           62000000, 3, 1, NOW(), '2008-10-15'),
+(5,  '青花瓷',         1,  '我很忙',       '流行', 239, 'CN-A01-07-0028', 'https://picsum.photos/seed/song5/80/80',  '天青色等烟雨而我在等你',                                                         58000000, 3, 1, NOW(), '2007-11-02'),
+(6,  '十年',           2,  '黑白灰',       '流行', 205, 'CN-A02-03-0008', 'https://picsum.photos/seed/song6/80/80',  '如果那两个字没有颤抖',                                                           55000000, 3, 1, NOW(), '2003-04-15'),
+(7,  '浮夸',           2,  'U87',          '摇滚', 286, 'CN-A02-05-0012', 'https://picsum.photos/seed/song7/80/80',  '有人问我我就会讲',                                                               48000000, 3, 1, NOW(), '2005-06-07'),
+(8,  '好久不见',       2,  '认了吧',       '流行', 256, 'CN-A02-07-0020', 'https://picsum.photos/seed/song8/80/80',  '我来到你的城市\n走过你来时的路',                                                 44000000, 3, 1, NOW(), '2007-04-24'),
+(9,  '修炼爱情',       3,  '因你而在',     '流行', 280, 'CN-A03-13-0010', 'https://picsum.photos/seed/song9/80/80',  '凭什么要失望\n藏眼泪到心脏',                                                     52000000, 3, 1, NOW(), '2013-03-13'),
+(10, '一千年以后',     3,  '编号89757',    '流行', 272, 'CN-A03-05-0022', 'https://picsum.photos/seed/song10/80/80', '心跳乱了节奏\n梦也不自由',                                                        46000000, 3, 1, NOW(), '2005-04-01'),
+(11, '光年之外',       4,  '光年之外',     '流行', 238, 'CN-A04-18-0045', 'https://picsum.photos/seed/song11/80/80', '感受停在我发端的指尖',                                                           63000000, 3, 1, NOW(), '2018-12-16'),
+(12, '泡沫',           4,  'Xposed',       '流行', 260, 'CN-A04-12-0032', 'https://picsum.photos/seed/song12/80/80', '阳光下的泡沫是彩色的\n就像被骗的我是幸福的',                                     49000000, 3, 1, NOW(), '2012-07-05'),
+(13, 'Shake It Off',   5,  '1989',         '流行', 219, 'US-A05-14-0080', 'https://picsum.photos/seed/song13/80/80', 'I stay out too late\nGot nothing in my brain',                                   78000000, 3, 1, NOW(), '2014-10-27'),
+(14, 'Love Story',     5,  'Fearless',     '流行', 235, 'US-A05-08-0055', 'https://picsum.photos/seed/song14/80/80', 'We were both young when I first saw you',                                         68000000, 3, 1, NOW(), '2008-09-12'),
+(15, '三天三夜',       6,  '我要快乐？',   '流行', 245, 'CN-A06-06-0015', 'https://picsum.photos/seed/song15/80/80', '一点都不会累\n我已经跳了三天三夜',                                               35000000, 3, 1, NOW(), '2006-02-17'),
+(16, '听海',           6,  'Bad Boy',      '流行', 278, 'CN-A06-97-0008', 'https://picsum.photos/seed/song16/80/80', '写信告诉我今天海是什么颜色',                                                     42000000, 3, 1, NOW(), '1997-06-11'),
+(17, '突然好想你',     7,  '后青春期的诗', '流行', 286, 'CN-A07-08-0022', 'https://picsum.photos/seed/song17/80/80', '最怕空气突然安静\n最怕朋友突然的关心',                                           52000000, 3, 1, NOW(), '2008-10-23'),
+(18, '知足',           7,  '知足',         '流行', 252, 'CN-A07-05-0015', 'https://picsum.photos/seed/song18/80/80', '怎么去拥有一道彩虹\n怎么去拥抱一夏天的风',                                       46000000, 3, 1, NOW(), '2005-08-26'),
+(19, '走马',           8,  '如也',         '流行', 242, 'CN-A08-15-0030', 'https://picsum.photos/seed/song19/80/80', '窗外雨都停了\n屋里灯还亮着',                                                     18000000, 3, 1, NOW(), '2015-02-02'),
+(20, '海阔天空',       9,  '乐与怒',       '摇滚', 326, 'CN-A09-93-0001', 'https://picsum.photos/seed/song20/80/80', '今天我寒夜里看雪飘过\n怀着冷却了的心窝漂远方',                                 55000000, 3, 1, NOW(), '1993-05-27'),
+(21, '光辉岁月',       9,  '命运派对',     '摇滚', 298, 'CN-A09-90-0005', 'https://picsum.photos/seed/song21/80/80', '钟声响起归家的讯号\n在他生命里仿佛带点唏嘘',                                     48000000, 3, 1, NOW(), '1990-09-01'),
+(22, 'Believer',       10, 'Evolve',       '摇滚', 204, 'US-A10-17-0010', 'https://picsum.photos/seed/song22/80/80', 'First things first\nImma say all the words inside my head',                       62000000, 3, 1, NOW(), '2017-02-01'),
+(23, 'Viva La Vida',   11, 'Viva La Vida', '摇滚', 242, 'UK-A11-08-0020', 'https://picsum.photos/seed/song23/80/80', 'I used to rule the world\nSeas would rise when I gave the word',                  58000000, 3, 1, NOW(), '2008-06-12'),
+(24, '梦回唐朝',       12, '唐朝',         '摇滚', 385, 'CN-A12-92-0003', 'https://picsum.photos/seed/song24/80/80', '菊花古剑和酒被咖啡泡入喧嚣的亭院',                                               12000000, 3, 1, NOW(), '1992-12-01'),
+(25, '你要跳舞吗',     13, '生命因你而火热','摇滚', 230, 'CN-A13-16-0018', 'https://picsum.photos/seed/song25/80/80', '每当浪潮来临的时候\n我当然也会伤心',                                             22000000, 3, 1, NOW(), '2016-04-12'),
+(26, '成都',           14, '无法长大',     '民谣', 312, 'CN-A14-16-0025', 'https://picsum.photos/seed/song26/80/80', '让我掉下眼泪的不止昨夜的酒',                                                     35000000, 3, 1, NOW(), '2016-12-21'),
+(27, '消愁',           15, '平凡的一天',   '民谣', 268, 'CN-A15-17-0030', 'https://picsum.photos/seed/song27/80/80', '当你走进这欢乐场\n背上所有的梦与想',                                             32000000, 3, 1, NOW(), '2017-07-29'),
+(28, '董小姐',         16, '安和桥北',     '民谣', 298, 'CN-A16-13-0008', 'https://picsum.photos/seed/song28/80/80', '董小姐你从没忘记你的微笑',                                                       22000000, 3, 1, NOW(), '2013-08-26'),
+(29, '云烟成雨',       17, '柔软',         '民谣', 206, 'CN-A17-17-0022', 'https://picsum.photos/seed/song29/80/80', '你的晚安是下意识的动作\n我们之间隔着一条河',                                     15000000, 3, 1, NOW(), '2017-10-19'),
+(30, 'Faded',          18, 'Different World','电子', 212, 'NO-A18-15-0060', 'https://picsum.photos/seed/song30/80/80', 'You were the shadow to my light\nDid you feel us',                                72000000, 3, 1, NOW(), '2015-12-03'),
+(31, 'Alone',          19, 'Monstercat',   '电子', 274, 'US-A19-16-0040', 'https://picsum.photos/seed/song31/80/80', 'Lost in your mind\nI wanna know',                                                 48000000, 3, 1, NOW(), '2016-05-13'),
+(32, 'Bangarang',      20, 'Bangarang EP', '电子', 218, 'US-A20-11-0025', 'https://picsum.photos/seed/song32/80/80', 'Shout to all my lost boys\nShout out to all my lost girls',                        35000000, 3, 1, NOW(), '2011-12-23'),
+(33, 'Halo',           21, 'I Am... Sasha Fierce','R&B', 262, 'US-A21-08-0100', 'https://picsum.photos/seed/song33/80/80', 'Remember those walls I built\nWell baby they are tumbling down',                   65000000, 3, 1, NOW(), '2008-11-18'),
+(34, 'Hotline Bling',  22, 'Views',        '嘻哈', 267, 'CA-A22-16-0085', 'https://picsum.photos/seed/song34/80/80', 'You used to call me on my cell phone\nLate night when you need my love',           56000000, 3, 1, NOW(), '2016-04-06'),
+(35, '演员',           23, '绅士',         'R&B',  252, 'CN-A23-15-0045', 'https://picsum.photos/seed/song35/80/80', '简单点说话的方式简单点\n递进的情绪请省略',                                       48000000, 3, 1, NOW(), '2015-06-05'),
+
+-- === 待审核(0) — 10首 ===
+(36, '未来之音',       4,  '2026新专辑',   '流行', 245, 'CN-A04-26-0001', 'https://picsum.photos/seed/song36/80/80', '未来已来新的节拍',                                                               0,        0, NULL, NULL,   '2026-05-20'),
+(37, '星空下的你',     7,  '2026单曲',     '流行', 258, 'CN-A07-26-0002', 'https://picsum.photos/seed/song37/80/80', '星空下的你如此美丽',                                                             0,        0, NULL, NULL,   '2026-06-01'),
+(38, '夏日限定',       14, '2026EP',       '民谣', 203, 'CN-A14-26-0003', 'https://picsum.photos/seed/song38/80/80', '夏天的风轻轻吹过',                                                               0,        0, NULL, NULL,   '2026-06-03'),
+(39, 'Electric Dreams', 18, 'Neon Future',  '电子', 231, 'NO-A18-26-0004', 'https://picsum.photos/seed/song39/80/80', 'Digital waves crashing on the shore',                                              0,        0, NULL, NULL,   '2026-05-28'),
+(40, '破晓时分',       23, '2026新专',     'R&B',  267, 'CN-A23-26-0005', 'https://picsum.photos/seed/song40/80/80', '黎明破晓之前我们重新出发',                                                       0,        0, NULL, NULL,   '2026-06-05'),
+(41, 'City Lights',    22, 'New Era',      '嘻哈', 223, 'CA-A22-26-0006', 'https://picsum.photos/seed/song41/80/80', 'City lights glowing in the night',                                                 0,        0, NULL, NULL,   '2026-05-15'),
+(42, '春风十里',       15, '单曲',         '民谣', 275, 'CN-A15-26-0007', 'https://picsum.photos/seed/song42/80/80', '春风十里不如你',                                                                 0,        0, NULL, NULL,   '2026-06-08'),
+(43, '霓虹',           25, '2026Mixtape',  '嘻哈', 198, 'CN-A25-26-0008', 'https://picsum.photos/seed/song43/80/80', '城市霓虹闪烁不停',                                                               0,        0, NULL, NULL,   '2026-06-10'),
+(44, 'Midnight Jazz',  27, 'After Dark',   '爵士', 312, 'US-A27-26-0009', 'https://picsum.photos/seed/song44/80/80', 'Saxophone whispers through the midnight air',                                      0,        0, NULL, NULL,   '2026-05-22'),
+(45, '月下独酌',       29, '古典新声',     '古典', 185, 'CN-A29-26-0010', 'https://picsum.photos/seed/song45/80/80', '花间一壶酒独酌无相亲',                                                           0,        0, NULL, NULL,   '2026-06-06'),
+
+-- === 已驳回(2) — 8首 ===
+(46, '灰色地带',       8,  '2025尝试',     '流行', 232, 'CN-A08-25-0010', 'https://picsum.photos/seed/song46/80/80', '在灰色地带徘徊寻找方向',                                                         12000,    2, 3,  '2025-12-15', '2025-11-20'),
+(47, 'Thunder Road',   10, '2025 Demo',    '摇滚', 245, 'US-A10-25-0012', 'https://picsum.photos/seed/song47/80/80', 'Rolling down the thunder road at midnight',                                        8000,     2, 3,  '2025-12-20', '2025-11-15'),
+(48, '深海回响',       16, '2025单曲',     '民谣', 289, 'CN-A16-25-0015', 'https://picsum.photos/seed/song48/80/80', '深海之中回响着你的声音',                                                         5000,     2, 3,  '2026-01-05', '2025-12-01'),
+(49, '闹钟',           21, '2025 Sessions','R&B', 254, 'US-A21-25-0020', 'https://picsum.photos/seed/song49/80/80', 'Woke up to the sound of your heartbeat',                                           30000,    2, 5,  '2026-01-10', '2025-12-10'),
+(50, '梦游者',         24, '2025 EP',      '嘻哈', 215, 'US-A24-25-0025', 'https://picsum.photos/seed/song50/80/80', 'Walking through dreams I cannot wake from',                                        15000,    2, 5,  '2026-01-15', '2025-12-20'),
+(51, '镜中人',         13, '2025作品',     '摇滚', 276, 'CN-A13-25-0030', 'https://picsum.photos/seed/song51/80/80', '镜子里的那个人他不认识我',                                                       22000,    2, 3,  '2026-02-01', '2026-01-15'),
+(52, 'Silent Wave',    20, '2025 Test',    '电子', 198, 'US-A20-25-0035', 'https://picsum.photos/seed/song52/80/80', 'A silent wave crashes over the digital sea',                                       18000,    2, 3,  '2026-02-10', '2026-01-20'),
+(53, '空房间',         26, '独奏集',       '古典', 210, 'CN-A26-25-0040', 'https://picsum.photos/seed/song53/80/80', '空荡的房间里钢琴声回荡',                                                         9000,     2, 5,  '2026-02-15', '2026-01-25'),
+
+-- === 已下架(4) — 5首 ===
+(54, '旧时光',         1,  '精选集',       '流行', 223, 'CN-A01-05-0100', 'https://picsum.photos/seed/song54/80/80',  '那些旧时光已经远去',                                                             8000000,  4, 1,  '2025-06-01', '2005-01-01'),
+(55, '叛逆',           2,  '2001单曲',     '流行', 198, 'CN-A02-01-0095', 'https://picsum.photos/seed/song55/80/80',  '年少轻狂不懂事',                                                                 6500000,  4, 1,  '2025-08-15', '2001-03-01'),
+(56, 'Early Demo',     5,  'Unreleased',   '流行', 185, 'US-A05-03-0070', 'https://picsum.photos/seed/song56/80/80',  'Just a demo track from the early days',                                           12000000, 4, 3,  '2025-10-01', '2003-06-15'),
+(57, '流星',           9,  '单曲',         '摇滚', 312, 'CN-A09-88-0008', 'https://picsum.photos/seed/song57/80/80',  '流星划过夜空只留下瞬间的光芒',                                                   4500000,  4, 1,  '2025-12-01', '1988-07-20'),
+(58, 'Goodbye',        19, '2019 Single',  '电子', 240, 'US-A19-19-0055', 'https://picsum.photos/seed/song58/80/80',  'It is time to say goodbye to yesterday',                                          9000000,  4, 3,  '2026-03-01', '2019-11-10'),
+
+-- === 审核通过待上架(1) — 2首 ===
+(59, '即将绽放',       28, '新爵士',       '爵士', 234, 'CA-A28-26-0012', 'https://picsum.photos/seed/song59/80/80', 'Like a flower about to bloom in spring',                                           5000,     1, 3,  '2026-06-09', '2026-05-01'),
+(60, '晨光曲',         30, '2026作品',     '爵士', 221, 'CN-A30-26-0015', 'https://picsum.photos/seed/song60/80/80', '清晨第一缕阳光洒在琴键上',                                                       3000,     1, 3,  '2026-06-10', '2026-06-02');
+
+-- 示例歌曲版权 (覆盖60首歌曲)
+INSERT INTO song_copyright (song_id, lyric_author, composer, copyright_company, license_start, license_end, status) VALUES
+(1,  '周杰伦',   '周杰伦',   '杰威尔音乐', '2003-01-01', '2030-12-31', 1),
+(2,  '周杰伦',   '周杰伦',   '杰威尔音乐', '2004-01-01', '2030-12-31', 1),
+(3,  '周杰伦',   '周杰伦',   '杰威尔音乐', '2005-01-01', '2030-12-31', 1),
+(4,  '周杰伦',   '周杰伦',   '杰威尔音乐', '2008-01-01', '2030-12-31', 1),
+(5,  '方文山',   '周杰伦',   '杰威尔音乐', '2007-01-01', '2030-12-31', 1),
+(6,  '林夕',     '陈小霞',   '环球音乐',   '2003-01-01', '2026-12-31', 2),
+(7,  '黄伟文',   '江志仁',   '环球音乐',   '2005-01-01', '2025-12-31', 3),
+(8,  '施人诚',   '陈小霞',   '环球音乐',   '2007-01-01', '2027-12-31', 1),
+(9,  '易家扬',   '林俊杰',   '海蝶音乐',   '2013-01-01', '2030-12-31', 1),
+(10, '林秋离',   '林俊杰',   '海蝶音乐',   '2005-01-01', '2028-12-31', 1),
+(11, '邓紫棋',   '邓紫棋',   '蜂鸟音乐',   '2018-01-01', '2035-12-31', 1),
+(12, '邓紫棋',   '邓紫棋',   '蜂鸟音乐',   '2012-01-01', '2030-12-31', 1),
+(13, 'Taylor Swift','Max Martin','Universal Music','2014-01-01','2040-12-31',1),
+(14, 'Taylor Swift','Taylor Swift','Universal Music','2008-01-01','2035-12-31',1),
+(15, '张惠妹',   '张惠妹',   '金牌大风',   '2006-01-01', '2028-12-31', 1),
+(16, '林秋离',   '涂惠源',   '丰华唱片',   '1997-01-01', '2027-12-31', 1),
+(17, '阿信',     '阿信',     '相信音乐',   '2008-01-01', '2030-12-31', 1),
+(18, '阿信',     '阿信',     '滚石唱片',   '2005-01-01', '2028-12-31', 1),
+(19, '陈粒',     '陈粒',     '独立发行',   '2015-01-01', '2030-12-31', 1),
+(20, '黄家驹',   '黄家驹',   '滚石唱片',   '1993-01-01', '2030-12-31', 1),
+(21, '黄家驹',   '黄家驹',   '滚石唱片',   '1990-01-01', '2028-12-31', 1),
+(22, 'Dan Reynolds','Imagine Dragons','Interscope','2017-01-01','2040-12-31',1),
+(23, 'Chris Martin','Coldplay','Parlophone','2008-01-01','2035-12-31',1),
+(24, '丁武',     '唐朝乐队', '魔岩唱片',   '1992-01-01', '2032-12-31', 1),
+(25, '彭磊',     '新裤子',   '摩登天空',   '2016-01-01', '2035-12-31', 1),
+(26, '赵雷',     '赵雷',     '独立发行',   '2016-01-01', '2035-12-31', 1),
+(27, '毛不易',   '毛不易',   '哇唧唧哇',   '2017-01-01', '2035-12-31', 1),
+(28, '宋冬野',   '宋冬野',   '摩登天空',   '2013-01-01', '2030-12-31', 1),
+(29, '房东的猫', '房东的猫', '独立发行',   '2017-01-01', '2035-12-31', 1),
+(30, 'Alan Walker','Alan Walker','Sony Music','2015-01-01','2040-12-31',1),
+(31, 'Marshmello','Marshmello','Monstercat','2016-01-01','2040-12-31',1),
+(32, 'Skrillex', 'Skrillex',  'OWSLA',      '2011-01-01', '2035-12-31', 1),
+(33, 'Beyoncé',  'Beyoncé',   'Columbia',   '2008-01-01', '2035-12-31', 1),
+(34, 'Drake',    'Drake',     'OVO Sound',  '2016-01-01', '2035-12-31', 1),
+(35, '薛之谦',   '薛之谦',   '海蝶音乐',   '2015-01-01', '2030-12-31', 1),
+(36, '邓紫棋',   '邓紫棋',   '蜂鸟音乐',   '2026-01-01', '2036-12-31', 0),
+(37, '阿信',     '阿信',     '相信音乐',   '2026-01-01', '2036-12-31', 0),
+(38, '赵雷',     '赵雷',     '独立发行',   '2026-01-01', '2036-12-31', 0),
+(39, 'Alan Walker','Alan Walker','Sony Music','2026-01-01','2040-12-31',0),
+(40, '薛之谦',   '薛之谦',   '海蝶音乐',   '2026-01-01', '2036-12-31', 0),
+(46, '陈粒',     '陈粒',     '独立发行',   '2025-01-01', '2030-12-31', 2),
+(47, 'Imagine Dragons','Imagine Dragons','Interscope','2025-01-01','2035-12-31',1),
+(48, '宋冬野',   '宋冬野',   '摩登天空',   '2025-01-01', '2030-12-31', 1),
+(49, 'Beyoncé',  'Beyoncé',   'Columbia',   '2025-01-01', '2030-12-31', 1),
+(50, 'Kendrick Lamar','K.Dot','TDE',        '2025-01-01', '2030-12-31', 3),
+(51, '彭磊',     '新裤子',   '摩登天空',   '2025-01-01', '2026-12-31', 2),
+(52, 'Skrillex', 'Skrillex',  'OWSLA',      '2025-01-01', '2026-12-31', 3),
+(53, '郎朗',     '郎朗',     '古典音乐',   '2025-01-01', '2030-12-31', 1),
+(54, '周杰伦',   '周杰伦',   '杰威尔音乐', '2005-01-01', '2025-06-01', 3),
+(55, '陈奕迅',   '陈奕迅',   '环球音乐',   '2001-01-01', '2025-08-15', 3),
+(56, 'Taylor Swift','Taylor Swift','Universal Music','2003-01-01','2025-10-01',3),
+(57, '黄家驹',   'Beyond',   '滚石唱片',   '1988-01-01', '2025-12-01', 3),
+(58, 'Marshmello','Marshmello','Monstercat','2019-01-01','2026-03-01',3),
+(59, 'Diana Krall','D.K.',   'Verve',       '2026-01-01', '2036-12-31', 1),
+(60, '王若琳',   '王若琳',   '索尼音乐',   '2026-01-01', '2036-12-31', 1);
+
+-- 示例歌单 (20个：8官方 + 12用户，覆盖4种状态)
+INSERT INTO playlist (id, name, cover_url, description, type, creator_id, creator_name, status, publish_time, is_pinned, song_count, favorite_count, play_count) VALUES
+-- 官方歌单(0) — 8个
+(1,  '华语热歌榜',   'https://picsum.photos/seed/pl1/80/80',  '精选华语热门金曲，每周更新榜单',            0, 1, '张明远', 1, '2025-01-01 10:00:00', 1, 50,  850000,  12000000),
+(2,  '新歌推荐',     'https://picsum.photos/seed/pl2/80/80',  '最新发布歌曲推荐，发现好音乐从这里开始',    0, 1, '张明远', 1, '2025-02-15 14:00:00', 0, 30,  320000,   5600000),
+(3,  '经典老歌',     'https://picsum.photos/seed/pl3/80/80',  '经典怀旧音乐合集，重温那些年的旋律',        0, 2, '王小花', 1, '2025-03-10 09:00:00', 0, 80,  620000,   9800000),
+(4,  '摇滚不朽',     'https://picsum.photos/seed/pl5/80/80',  '致敬摇滚经典，从Beyond到Coldplay',          0, 1, '张明远', 1, '2025-04-01 16:00:00', 1, 35,  280000,   4500000),
+(5,  '电音派对',     'https://picsum.photos/seed/pl6/80/80',  '燃炸现场的电音精选，派对必备BGM',           0, 2, '王小花', 1, '2025-05-20 12:00:00', 0, 25,  190000,   3800000),
+(6,  '爵士时光',     'https://picsum.photos/seed/pl7/80/80',  '慵懒午后的一杯咖啡，配上舒缓爵士',          0, 4, '陈芸',   1, '2025-06-15 11:00:00', 0, 20,  120000,   2100000),
+(7,  '民谣·诗与远方', 'https://picsum.photos/seed/pl8/80/80', '民谣里的故事，关于青春和远方的诗',          0, 4, '陈芸',   1, '2025-07-01 08:00:00', 0, 28,  230000,   4200000),
+(8,  '古典殿堂',     'https://picsum.photos/seed/pl9/80/80',  '穿越百年的经典旋律，古典音乐精选',          0, 1, '张明远', 1, '2025-08-10 15:00:00', 0, 18,  95000,    1800000),
+-- 用户歌单(1) — 8个已发布
+(9,  '深夜emo必备',  'https://picsum.photos/seed/pl10/80/80', '深夜一个人听的歌，治愈所有不开心',          1, 1, '张明远', 1, '2025-09-01 22:00:00', 0, 45,  560000,   8900000),
+(10, '健身房专属',   'https://picsum.photos/seed/pl11/80/80', '高燃运动BGM，让每一组都更有力量',           1, 1, '张明远', 1, '2025-09-15 18:00:00', 0, 32,  310000,   5600000),
+(11, '开车必备',     'https://picsum.photos/seed/pl12/80/80', '自驾游路上不可缺少的音乐伴侣',              1, 2, '王小花', 1, '2025-10-01 07:00:00', 0, 40,  420000,   7200000),
+(12, '雨天心情',     'https://picsum.photos/seed/pl13/80/80', '窗外下着雨，耳边流淌着温柔旋律',            1, 3, '李审委', 1, '2025-10-20 15:00:00', 0, 28,  180000,   3400000),
+(13, '校园回忆',     'https://picsum.photos/seed/pl14/80/80', '那些年我们一起听过的歌',                    1, 4, '陈芸',   1, '2025-11-05 10:00:00', 0, 52,  380000,   6500000),
+(14, '年终盘点2025', 'https://picsum.photos/seed/pl15/80/80', '2025年最值得循环播放的100首歌',             1, 1, '张明远', 1, '2025-12-31 00:00:00', 1, 100, 920000,  15000000),
+(15, '周末Brunch',   'https://picsum.photos/seed/pl16/80/80', '慵懒周末早午餐，轻快音乐相伴',              1, 2, '王小花', 1, '2026-01-10 09:00:00', 0, 22,  85000,   1500000),
+(16, 'R&B慢摇',      'https://picsum.photos/seed/pl17/80/80', '节奏与旋律的完美融合，R&B精品歌单',         1, 4, '陈芸',   1, '2026-02-14 20:00:00', 0, 35,  210000,   4100000),
+-- 待审核(0) — 2个
+(17, '2026春季新歌速递', 'https://picsum.photos/seed/pl18/80/80', '2026年春季最新发行的华语歌曲精选',          1, 3, '李审委', 0, NULL,                    0, 18,  0,        0),
+(18, 'AI音乐探索',       'https://picsum.photos/seed/pl19/80/80', '人工智能创作的音乐作品合集',                0, 1, '张明远', 0, NULL,                    0, 12,  0,        0),
+-- 已驳回(2) — 1个
+(19, '违规内容合集', 'https://picsum.photos/seed/pl20/80/80', '含未授权翻唱内容',                          1, 1, '张明远', 2, NULL,                    0, 5,   1200,     25000),
+-- 已下架(3) — 1个
+(20, '2024年终回顾', 'https://picsum.photos/seed/pl21/80/80', '2024年度热门歌曲回顾（已过期）',            0, 2, '王小花', 3, '2024-12-31 23:59:00', 0, 100, 450000,   8200000);
+
+-- 示例歌单-歌曲关联 (为部分歌单关联歌曲)
+INSERT INTO playlist_song (playlist_id, song_id, sort_order) VALUES
+-- 华语热歌榜 (playlist 1)
+(1, 1, 1), (1, 2, 2), (1, 3, 3), (1, 4, 4), (1, 5, 5), (1, 6, 6), (1, 9, 7), (1, 11, 8), (1, 15, 9), (1, 17, 10),
+-- 摇滚不朽 (playlist 4)
+(4, 7, 1), (4, 20, 2), (4, 21, 3), (4, 22, 4), (4, 23, 5), (4, 24, 6), (4, 25, 7),
+-- 电音派对 (playlist 5)
+(5, 30, 1), (5, 31, 2), (5, 32, 3), (5, 39, 4),
+-- 爵士时光 (playlist 6)
+(6, 44, 1), (6, 59, 2), (6, 60, 3),
+-- 民谣·诗与远方 (playlist 7)
+(7, 26, 1), (7, 27, 2), (7, 28, 3), (7, 29, 4), (7, 38, 5), (7, 42, 6),
+-- R&B慢摇 (playlist 16)
+(16, 33, 1), (16, 35, 2), (16, 40, 3), (16, 49, 4),
+-- 深夜emo必备 (playlist 9)
+(9, 8, 1), (9, 19, 2), (9, 46, 3), (9, 48, 4);
+
+
+-- 示例终端用户 (50个：30普通 + 12VIP + 8音乐人，覆盖3种状态)
+INSERT INTO app_user (id, nickname, phone, avatar, user_type, vip_expire, status, favorite_count, playlist_count, registered_at, last_login_at) VALUES
+-- 普通用户(0) — 30个
+(1,  '音乐迷',         '13793422293',       'https://picsum.photos/seed/yinyuemi/200/200',       0, NULL,            1, 128,  5,  '2024-03-15', '2026-06-10 18:30:00'),
+(2,  '摇滚少女',       '17634515458',   'https://picsum.photos/seed/yaogunshaonv/200/200',   0, NULL,            1, 45,   3,  '2024-06-20', '2026-06-11 08:15:00'),
+(3,  '爵士猫',         '13781729437',      'https://picsum.photos/seed/jueshimao/200/200',      0, NULL,            1, 89,   8,  '2023-11-10', '2026-06-10 22:00:00'),
+(4,  '流行乐迷',       '13797648183',   'https://picsum.photos/seed/liuxingyuemi/200/200',   0, NULL,            1, 256,  12, '2023-01-05', '2026-06-11 06:45:00'),
+(5,  '民谣追梦人',     '13904285985',    'https://picsum.photos/seed/minyaozmren/200/200',    0, NULL,            1, 67,   4,  '2024-08-22', '2026-06-11 09:30:00'),
+(6,  '电音达人',       '18093285611',   'https://picsum.photos/seed/dianyindaren/200/200',   0, NULL,            1, 34,   2,  '2025-01-18', '2026-06-09 11:20:00'),
+(7,  '古典之魂',       '18670831778',   'https://picsum.photos/seed/gudianzhihun/200/200',   0, NULL,            1, 102,  6,  '2024-04-30', '2026-06-10 14:00:00'),
+(8,  '嘻哈小子',       '17643052037',     'https://picsum.photos/seed/xihaxiaozi/200/200',     0, NULL,            1, 178,  15, '2024-09-12', '2026-06-11 07:00:00'),
+(9,  '节奏蓝调迷',     '13593612634',  'https://picsum.photos/seed/jiezoulandiao/200/200',  0, NULL,            1, 156,  9,  '2024-11-05', '2026-06-10 20:30:00'),
+(10, '吉他少年',       '18681061954',   'https://picsum.photos/seed/jitashaonian/200/200',   0, NULL,            1, 32,   3,  '2025-03-20', '2026-06-11 08:50:00'),
+(11, '架子鼓手',       '18809913848',    'https://picsum.photos/seed/jiazigushou/200/200',    0, NULL,            1, 55,   7,  '2025-02-14', '2026-06-10 19:15:00'),
+(12, '钢琴女孩',       '13569332722',   'https://picsum.photos/seed/gangqinnvhai/200/200',   0, NULL,            1, 88,   11, '2024-07-08', '2026-06-11 05:30:00'),
+(13, '天籁之声',       '18951829799','https://picsum.photos/seed/tianlaizhisheng/200/200', 0, NULL,            1, 210,  18, '2023-06-15', '2026-06-10 21:00:00'),
+(14, '低音炮',         '18692763789',       'https://picsum.photos/seed/diyinpao/200/200',       0, NULL,            1, 41,   2,  '2025-05-01', '2026-06-11 10:00:00'),
+(15, '寻律旅人',       '18009199806',     'https://picsum.photos/seed/xunlvlvren/200/200',     0, NULL,            1, 73,   5,  '2024-10-10', '2026-06-10 16:45:00'),
+(16, '百灵鸟',         '13345430705',    'https://picsum.photos/seed/bailingniao/200/200',    0, NULL,            1, 23,   1,  '2025-06-01', '2026-06-08 12:00:00'),
+(17, '老歌迷',         '15940430301',        'https://picsum.photos/seed/laogemi/200/200',        0, NULL,            1, 145,  10, '2023-08-25', '2026-06-10 23:00:00'),
+(18, '音轨猎人',       '18116488612',   'https://picsum.photos/seed/yinguilieren/200/200',   0, NULL,            1, 67,   4,  '2024-12-18', '2026-06-11 03:15:00'),
+(19, '回声收集者',     '13989126110', 'https://picsum.photos/seed/huishengshouji/200/200', 0, NULL,            1, 98,   6,  '2024-01-22', '2026-06-10 17:30:00'),
+(20, '节奏控',         '18609735350',     'https://picsum.photos/seed/jiezoukong/200/200',     0, NULL,            0, 12,   1,  '2025-08-08', '2026-05-20 10:00:00'),
+(21, '和弦诗人',       '18910441545',   'https://picsum.photos/seed/hexianshiren/200/200',   0, NULL,            1, 56,   3,  '2025-04-15', '2026-06-10 15:00:00'),
+(22, '节拍器',         '13704832481',       'https://picsum.photos/seed/jiepaiqi/200/200',       0, NULL,            1, 34,   2,  '2025-07-30', '2026-06-09 19:00:00'),
+(23, '追弦人',         '17697331063',    'https://picsum.photos/seed/zhuixianren/200/200',    0, NULL,            1, 89,   7,  '2024-02-28', '2026-06-10 13:30:00'),
+(24, '音符收藏家',     '18896752802',  'https://picsum.photos/seed/yinfushoucang/200/200',  0, NULL,            0, 15,   0,  '2025-12-01', '2026-04-15 08:00:00'),
+(25, '歌词猎人',       '18898125446',     'https://picsum.photos/seed/gecilieren/200/200',     0, NULL,            1, 201,  14, '2023-04-10', '2026-06-11 01:30:00'),
+(26, '贝斯骑士',       '18970564674',     'https://picsum.photos/seed/beisiqishi/200/200',     0, NULL,            1, 43,   2,  '2025-09-05', '2026-06-10 11:00:00'),
+(27, '高音之巅',       '18798106289',  'https://picsum.photos/seed/gaoyinzhidian/200/200',  0, NULL,            0, 8,    0,  '2026-01-12', '2026-03-10 09:30:00'),
+(28, '中音王子',       '17601974058', 'https://picsum.photos/seed/zhongyinwangzi/200/200', 0, NULL,            1, 67,   5,  '2024-05-20', '2026-06-10 16:00:00'),
+(29, '黑胶收藏家',     '13845119886','https://picsum.photos/seed/heijiaoshoucang/200/200', 0, NULL,            1, 112,  8,  '2023-10-01', '2026-06-11 07:30:00'),
+(30, '乐波荡漾',       '15332741325',  'https://picsum.photos/seed/yuebodangyang/200/200',  0, NULL,            1, 25,   1,  '2025-10-20', '2026-06-10 18:00:00'),
+-- VIP会员(1) — 12个
+(31, '乐迷达人',       '18177996158',     'https://picsum.photos/seed/yuemidaren/200/200',     1, '2027-06-11',    1, 256,  20, '2024-06-20', '2026-06-11 09:00:00'),
+(32, '节拍专家',       '15315171831', 'https://picsum.photos/seed/jiepaizhuanjia/200/200', 1, '2026-12-31',    1, 312,  25, '2024-01-15', '2026-06-10 20:00:00'),
+(33, '声音魔术师',     '18043932878',  'https://picsum.photos/seed/shengyinmoshu/200/200',  1, '2027-03-15',    1, 198,  16, '2024-08-01', '2026-06-11 06:30:00'),
+(34, '律动大师',       '15676097774',    'https://picsum.photos/seed/lvdongdashi/200/200',    1, '2026-08-20',    1, 445,  30, '2023-05-10', '2026-06-10 22:00:00'),
+(35, '原声控',         '18157631175',  'https://picsum.photos/seed/yuanshengkong/200/200',  1, '2027-01-05',    1, 167,  12, '2024-09-25', '2026-06-11 08:00:00'),
+(36, '音爆炸弹',       '13617960657',   'https://picsum.photos/seed/yinbaozhadan/200/200',   1, '2026-10-10',    1, 289,  22, '2024-03-08', '2026-06-10 19:00:00'),
+(37, '音乐忍者',       '15657875222',   'https://picsum.photos/seed/yinyuerenzhe/200/200',   1, '2027-05-18',    1, 523,  35, '2023-07-20', '2026-06-11 10:00:00'),
+(38, '旋律掌门人',     '15961118483', 'https://picsum.photos/seed/xuanlvzhangmen/200/200', 1, '2026-11-30',    1, 156,  14, '2024-11-12', '2026-06-10 21:00:00'),
+(39, '音响发烧友',     '15952819851', 'https://picsum.photos/seed/yinxiangfashao/200/200', 1, '2027-04-22',    1, 378,  28, '2023-12-01', '2026-06-11 07:00:00'),
+(40, '低音狂人',       '18940666455',  'https://picsum.photos/seed/diyinkuangren/200/200',  1, '2026-07-15',    1, 234,  18, '2024-04-05', '2026-06-10 17:00:00'),
+(41, '旋律大师',       '15376571990',    'https://picsum.photos/seed/xuanlvdashi/200/200',    1, '2027-02-28',    1, 189,  15, '2024-07-18', '2026-06-11 05:30:00'),
+(42, '节奏之王',       '17617717629',  'https://picsum.photos/seed/jiezouzhiwang/200/200',  1, '2026-09-01',    0, 467,  32, '2023-02-14', '2026-02-01 12:00:00'),
+-- 音乐人(2) — 8个
+(43, '张逸凡',         '13397762208',     'https://picsum.photos/seed/zhangyifan/200/200',     2, NULL, 1, 87,  12, '2023-03-01', '2026-06-10 16:00:00'),
+(44, '林火花',         '13372597759',      'https://picsum.photos/seed/linhuohua/200/200',      2, NULL,           1, 156, 25, '2023-06-15', '2026-06-11 02:00:00'),
+(45, '李子墨',         '18604664423',         'https://picsum.photos/seed/lizimo/200/200',         2, NULL,           1, 45,  8,  '2024-01-20', '2026-06-10 14:00:00'),
+(46, '王思远',         '13321925783',     'https://picsum.photos/seed/wangsiyuan/200/200',     2, NULL,           1, 234, 30, '2023-09-10', '2026-06-11 09:00:00'),
+(47, '杨不凡',         '18649122408',      'https://picsum.photos/seed/yangbufan/200/200',      2, NULL,           1, 312, 40, '2023-11-25', '2026-06-10 22:00:00'),
+(48, '陈雨晴',         '18846290894',     'https://picsum.photos/seed/chenyuqing/200/200',     2, NULL,           0, 23,  3,  '2025-08-08', '2026-05-15 10:00:00'),
+(49, '赵明哲',         '13978409816',    'https://picsum.photos/seed/zhaomingzhe/200/200',    2, NULL,           1, 178, 22, '2024-02-14', '2026-06-10 20:00:00'),
+(50, '孙一凡',         '13634119117',       'https://picsum.photos/seed/sunyifan/200/200',       2, NULL,           2, 56,  6,  '2025-12-01', '2026-06-08 15:00:00');
+
+-- 示例操作日志 (30条，覆盖多种操作类型和人员)
+INSERT INTO operation_log (operator_id, operator_name, ip_address, op_type, module, detail, result, created_at) VALUES
+(1, '张明远', '192.168.1.100', 'LOGIN',  '系统',     '登录系统',                                 1, '2026-06-11 08:00:00'),
+(2, '王小花', '192.168.1.101', 'LOGIN',  '系统',     '登录系统',                                 1, '2026-06-11 08:15:00'),
+(3, '李审委', '192.168.1.102', 'LOGIN',  '系统',     '登录系统',                                 1, '2026-06-11 08:30:00'),
+(1, '张明远', '192.168.1.100', 'ADD',    '歌曲管理', '新增歌曲: 晴天',                           1, '2026-06-10 09:00:00'),
+(1, '张明远', '192.168.1.100', 'EDIT',   '歌曲管理', '修改歌曲: 七里香 封面图片',                1, '2026-06-10 10:00:00'),
+(3, '李审委', '192.168.1.102', 'AUDIT',  '歌曲管理', '审核通过: 稻香',                           1, '2026-06-10 14:00:00'),
+(3, '李审委', '192.168.1.102', 'AUDIT',  '歌曲管理', '驳回: 灰色地带 (含未授权采样)',            1, '2026-06-09 15:30:00'),
+(5, '赵磊',   '192.168.1.105', 'AUDIT',  '歌单管理', '审核通过: 华语热歌榜',                     1, '2026-06-10 16:00:00'),
+(5, '赵磊',   '192.168.1.105', 'AUDIT',  '歌单管理', '驳回: 违规内容合集',                       1, '2026-06-09 11:00:00'),
+(2, '王小花', '192.168.1.101', 'ADD',    '歌手管理', '新增歌手: 邓紫棋',                         1, '2026-06-08 09:30:00'),
+(2, '王小花', '192.168.1.101', 'EDIT',   '歌手管理', '更新歌手: 周杰伦 简介信息',                1, '2026-06-08 14:00:00'),
+(4, '陈芸',   '192.168.1.104', 'ADD',    '歌单管理', '新增歌单: 爵士时光',                       1, '2026-06-07 10:00:00'),
+(4, '陈芸',   '192.168.1.104', 'EDIT',   '歌单管理', '更新歌单: 民谣·诗与远方 封面',             1, '2026-06-07 11:00:00'),
+(1, '张明远', '192.168.1.100', 'DELETE', '歌单管理', '删除过期的测试歌单',                       1, '2026-06-07 15:00:00'),
+(2, '王小花', '192.168.1.101', 'EDIT',   '歌曲管理', '修改歌曲: 消愁 歌词修正',                  1, '2026-06-06 10:30:00'),
+(3, '李审委', '192.168.1.102', 'AUDIT',  '歌曲管理', '批量审核: 通过5首歌曲',                    1, '2026-06-06 14:00:00'),
+(1, '张明远', '192.168.1.100', 'EDIT',   '用户管理', '修改用户状态: 摇滚少女 → 禁用',          1, '2026-06-05 16:00:00'),
+(4, '陈芸',   '192.168.1.104', 'EXPORT', '歌曲管理', '导出歌曲列表 (45620条)',                   1, '2026-06-05 09:00:00'),
+(2, '王小花', '192.168.1.101', 'ADD',    '歌曲管理', '新增歌曲: Faded',                          0, '2026-06-05 11:00:00'),
+(2, '王小花', '192.168.1.101', 'ADD',    '歌曲管理', '新增歌曲: Faded (重试成功)',               1, '2026-06-05 11:05:00'),
+(5, '赵磊',   '192.168.1.105', 'AUDIT',  '歌单管理', '驳回: 2026春季新歌速递 (曲目不足)',       1, '2026-06-04 15:00:00'),
+(3, '李审委', '192.168.1.102', 'LOGIN',  '系统',     '登录系统',                                 1, '2026-06-04 08:00:00'),
+(1, '张明远', '192.168.1.100', 'EDIT',   '系统',     '修改个人资料: 更新手机号',                 1, '2026-06-03 14:00:00'),
+(2, '王小花', '192.168.1.101', 'ADD',    '歌手管理', '新增歌手: Taylor Swift',                   1, '2026-06-03 10:00:00'),
+(4, '陈芸',   '192.168.1.104', 'EXPORT', '歌手管理', '导出歌手列表 (2156条)',                    1, '2026-06-02 09:00:00'),
+(1, '张明远', '192.168.1.100', 'ADD',    '歌单管理', '新增歌单: 古典殿堂',                       1, '2026-06-02 16:00:00'),
+(5, '赵磊',   '192.168.1.105', 'AUDIT',  '歌曲管理', '审核通过: Faded',                          1, '2026-06-01 14:00:00'),
+(3, '李审委', '192.168.1.102', 'AUDIT',  '歌曲管理', '批量审核: 驳回2首 + 通过3首',              1, '2026-06-01 10:00:00'),
+(1, '张明远', '192.168.1.100', 'DELETE', '用户管理', '删除违规用户: spam_bot_1234',               1, '2026-05-31 17:00:00'),
+(2, '王小花', '192.168.1.101', 'LOGIN',  '系统',     '登录系统',                                 1, '2026-05-31 08:00:00');
+
+-- 歌曲每日播放统计 (最近7天 × 部分热门歌曲)
+INSERT INTO song_play_stat (song_id, play_date, play_count, unique_listeners) VALUES
+(1,  '2026-06-05', 245000, 182000), (1,  '2026-06-06', 251000, 188000), (1,  '2026-06-07', 238000, 176000),
+(1,  '2026-06-08', 242000, 180000), (1,  '2026-06-09', 256000, 192000), (1,  '2026-06-10', 261000, 198000), (1, '2026-06-11', 185000, 142000),
+(2,  '2026-06-05', 198000, 145000), (2,  '2026-06-06', 205000, 152000), (2,  '2026-06-07', 192000, 140000),
+(2,  '2026-06-08', 201000, 148000), (2,  '2026-06-09', 212000, 158000), (2,  '2026-06-10', 218000, 163000), (2, '2026-06-11', 152000, 118000),
+(11, '2026-06-05', 178000, 132000), (11, '2026-06-06', 185000, 138000), (11, '2026-06-07', 172000, 126000),
+(11, '2026-06-08', 180000, 134000), (11, '2026-06-09', 192000, 144000), (11, '2026-06-10', 198000, 148000), (11,'2026-06-11', 142000, 108000),
+(26, '2026-06-05', 95000,  72000),  (26, '2026-06-06', 102000, 78000),  (26, '2026-06-07', 88000,  65000),
+(26, '2026-06-08', 91000,  68000),  (26, '2026-06-09', 105000, 80000),  (26, '2026-06-10', 108000, 82000),  (26,'2026-06-11', 78000,  59000),
+(30, '2026-06-05', 210000, 158000), (30, '2026-06-06', 218000, 163000), (30, '2026-06-07', 205000, 152000),
+(30, '2026-06-08', 212000, 159000), (30, '2026-06-09', 225000, 168000), (30, '2026-06-10', 232000, 175000), (30,'2026-06-11', 168000, 128000);
+
+-- 风格播放统计 (最近7天)
+INSERT INTO style_play_stat (style, stat_date, play_count, song_count) VALUES
+('流行', '2026-06-05', 2850000, 15200), ('流行', '2026-06-06', 2910000, 15250), ('流行', '2026-06-07', 2780000, 15200),
+('流行', '2026-06-08', 2830000, 15280), ('流行', '2026-06-09', 2980000, 15300), ('流行', '2026-06-10', 3050000, 15320), ('流行', '2026-06-11', 2150000, 15340),
+('摇滚', '2026-06-05', 980000,  8200),  ('摇滚', '2026-06-06', 1020000, 8250),  ('摇滚', '2026-06-07', 950000,  8200),
+('摇滚', '2026-06-08', 990000,  8280),  ('摇滚', '2026-06-09', 1050000, 8300),  ('摇滚', '2026-06-10', 1080000, 8320),  ('摇滚', '2026-06-11', 780000,  8340),
+('民谣', '2026-06-05', 520000,  6100),  ('民谣', '2026-06-06', 540000,  6150),  ('民谣', '2026-06-07', 510000,  6100),
+('民谣', '2026-06-08', 530000,  6180),  ('民谣', '2026-06-09', 560000,  6200),  ('民谣', '2026-06-10', 580000,  6220),  ('民谣', '2026-06-11', 420000,  6250),
+('电子', '2026-06-05', 1150000, 4500),  ('电子', '2026-06-06', 1200000, 4520),  ('电子', '2026-06-07', 1120000, 4500),
+('电子', '2026-06-08', 1180000, 4550),  ('电子', '2026-06-09', 1250000, 4580),  ('电子', '2026-06-10', 1280000, 4600),  ('电子', '2026-06-11', 920000,  4620),
+('嘻哈', '2026-06-05', 520000,  3200),  ('嘻哈', '2026-06-06', 540000,  3250),  ('嘻哈', '2026-06-07', 510000,  3200),
+('嘻哈', '2026-06-08', 530000,  3280),  ('嘻哈', '2026-06-09', 560000,  3300),  ('嘻哈', '2026-06-10', 580000,  3350),  ('嘻哈', '2026-06-11', 420000,  3380),
+('R&B',  '2026-06-05', 780000,  3800),  ('R&B',  '2026-06-06', 820000,  3850),  ('R&B',  '2026-06-07', 760000,  3800),
+('R&B',  '2026-06-08', 800000,  3880),  ('R&B',  '2026-06-09', 850000,  3900),  ('R&B',  '2026-06-10', 880000,  3950),  ('R&B',  '2026-06-11', 650000,  3980),
+('古典', '2026-06-05', 180000,  1500),  ('古典', '2026-06-06', 190000,  1520),  ('古典', '2026-06-07', 175000,  1500),
+('古典', '2026-06-08', 185000,  1550),  ('古典', '2026-06-09', 200000,  1580),  ('古典', '2026-06-10', 210000,  1600),  ('古典', '2026-06-11', 150000,  1620),
+('爵士', '2026-06-05', 250000,  2000),  ('爵士', '2026-06-06', 260000,  2020),  ('爵士', '2026-06-07', 240000,  2000),
+('爵士', '2026-06-08', 255000,  2050),  ('爵士', '2026-06-09', 270000,  2080),  ('爵士', '2026-06-10', 280000,  2100),  ('爵士', '2026-06-11', 200000,  2120);

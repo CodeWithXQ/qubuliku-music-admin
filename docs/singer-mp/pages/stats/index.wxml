@@ -1,0 +1,48 @@
+<view class="page-container stats-page">
+  <!-- 周期切换 -->
+  <view class="tab-bar" style="margin:var(--gap-lg)">
+    <view class="tab-item {{period === 7 ? 'active' : ''}}" data-period="7" bindtap="onPeriodChange">近7天</view>
+    <view class="tab-item {{period === 30 ? 'active' : ''}}" data-period="30" bindtap="onPeriodChange">近30天</view>
+    <view class="tab-item {{period === 90 ? 'active' : ''}}" data-period="90" bindtap="onPeriodChange">近90天</view>
+  </view>
+
+  <!-- 核心指标 -->
+  <view class="section-dark" wx:if="{{overview}}" style="text-align:center">
+    <view style="display:flex;justify-content:space-between">
+      <view style="flex:1"><text style="font-size:var(--font-xxl);font-weight:800;color:var(--gold);font-family:'SF Mono',monospace;display:block">{{fmtWan(overview.totalPlays)}}</text><text style="font-size:var(--font-xs);color:var(--gold);opacity:0.8">总播放量</text></view>
+      <view style="flex:1"><text style="font-size:var(--font-xxl);font-weight:800;color:var(--gold);font-family:'SF Mono',monospace;display:block">{{fmtWan(overview.totalFavorites)}}</text><text style="font-size:var(--font-xs);color:var(--gold);opacity:0.8">总收藏</text></view>
+      <view style="flex:1"><text style="font-size:var(--font-xxl);font-weight:800;color:var(--gold);font-family:'SF Mono',monospace;display:block">{{overview.followerCount || 0}}</text><text style="font-size:var(--font-xs);color:var(--gold);opacity:0.8">粉丝数</text></view>
+    </view>
+  </view>
+
+  <!-- 播放趋势 -->
+  <view class="section" wx:if="{{playsTrend.length > 0}}">
+    <text class="section-title">播放趋势</text>
+    <view style="display:flex;align-items:flex-end;gap:10rpx;height:220rpx;padding:0 4rpx;margin-top:16rpx">
+      <block wx:for="{{playsTrend}}" wx:key="date">
+        <view style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%">
+          <view style="width:100%;background:var(--gold-dark);border-radius:8rpx 8rpx 0 0;min-height:6rpx;height:{{(item.count / maxVal(playsTrend, 'count')) * 170}}rpx;transition:height 0.4s ease"></view>
+          <text style="font-size:18rpx;color:var(--text-dim);margin-top:8rpx">{{item.date.slice(5)}}</text>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <!-- 热门歌曲排行 -->
+  <view class="section" wx:if="{{topSongs.length > 0}}">
+    <text class="section-title">热门歌曲 Top5</text>
+    <block wx:for="{{topSongs}}" wx:key="id">
+      <view class="song-row">
+        <text style="font-size:32rpx;font-weight:800;width:44rpx;text-align:center;flex-shrink:0;color:{{index===0?'var(--gold-deep)':index===1?'#999':index===2?'#c96':'var(--text-dim)'}}">{{index + 1}}</text>
+        <image class="song-cover" src="{{item.coverUrl}}" mode="aspectFill" />
+        <view class="song-info">
+          <text class="song-title">{{item.title}}</text>
+          <text class="song-sub">播放 {{fmtWan(item.playCount)}}</text>
+        </view>
+      </view>
+    </block>
+  </view>
+
+  <view wx:if="{{!overview}}" class="empty">加载数据中...</view>
+  <view class="footer-placeholder"></view>
+</view>

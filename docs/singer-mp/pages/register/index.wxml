@@ -1,0 +1,23 @@
+<view class="page-container register-page">
+  <view style="padding-top:80rpx;text-align:center">
+    <text style="font-size:36rpx;font-weight:700;color:var(--gold);display:block">完善歌手资料</text>
+    <text style="font-size:24rpx;color:rgba(252,241,192,0.7);margin-top:12rpx;display:block">完善资料后将自动提交认证审核</text>
+  </view>
+  <view class="form-card" style="margin-top:40rpx">
+    <view class="form-item">
+      <text class="form-label">歌手名称 *</text>
+      <input class="form-input" value="{{nickname}}" data-field="nickname" bindinput="onInput" placeholder="请输入您的歌手名称" maxlength="20" />
+    </view>
+    <view class="form-item">
+      <text class="form-label">音乐风格 *</text>
+      <picker mode="selector" range="{{styleList}}" value="{{styleIndex}}" bindchange="onStyleChange">
+        <view class="form-input" style="line-height:80rpx;color:{{styleIndex >= 0 ? '' : '#ccc'}}">{{styleIndex >= 0 ? styleList[styleIndex] : '请选择您的音乐风格'}}</view>
+      </picker>
+    </view>
+    <view class="form-item">
+      <text class="form-label">个人简介</text>
+      <textarea class="form-textarea" value="{{intro}}" data-field="intro" bindinput="onInput" placeholder="介绍一下您的音乐风格和代表作品（选填）" maxlength="200" />
+    </view>
+  </view>
+  <button class="submit-btn" bindtap="onSubmit" loading="{{submitting}}">{{submitting ? '提交中...' : '完成注册'}}</button>
+</view>

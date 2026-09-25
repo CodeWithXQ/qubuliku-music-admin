@@ -1,0 +1,149 @@
+/* ============================================
+   消息详情 — 仿微信服务通知样式
+   ============================================ */
+
+.chat-page {
+  min-height: 100vh;
+  background: #ededed;
+  padding: 20rpx 24rpx 40rpx;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* ---- 居中时间戳 ---- */
+.chat-time {
+  display: flex;
+  justify-content: center;
+  padding: 16rpx 0 28rpx;
+}
+.chat-time-text {
+  font-size: 22rpx;
+  color: #b0b0b0;
+  background: rgba(0, 0, 0, 0.06);
+  padding: 6rpx 16rpx;
+  border-radius: 6rpx;
+}
+
+/* ---- 消息行 ---- */
+.chat-msg {
+  display: flex;
+  align-items: flex-start;
+  gap: 16rpx;
+}
+
+/* ---- 头像图片 ---- */
+.chat-avatar-img {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 14rpx;
+  flex-shrink: 0;
+  background: #e8e8e8;
+}
+
+/* ---- 气泡 ---- */
+.chat-bubble {
+  position: relative;
+  flex: 1;
+  background: #fff;
+  border-radius: 8rpx 20rpx 20rpx 20rpx;
+  padding: 28rpx 28rpx 24rpx;
+  box-shadow: 0 1rpx 3rpx rgba(0, 0, 0, 0.06);
+}
+
+.chat-bubble-arrow {
+  position: absolute;
+  top: 16rpx;
+  left: -12rpx;
+  width: 0;
+  height: 0;
+  border-top: 10rpx solid transparent;
+  border-bottom: 10rpx solid transparent;
+  border-right: 14rpx solid #fff;
+}
+
+.chat-sender {
+  font-size: 24rpx;
+  color: #999;
+  display: block;
+  margin-bottom: 14rpx;
+}
+
+.chat-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+  display: block;
+  line-height: 1.4;
+  margin-bottom: 16rpx;
+}
+
+.chat-body {
+  font-size: 28rpx;
+  color: #444;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  word-break: break-all;
+  display: block;
+}
+
+.chat-footer {
+  margin-top: 20rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx solid #f0f0f0;
+}
+.chat-type-tag {
+  font-size: 20rpx;
+  padding: 4rpx 14rpx;
+  border-radius: 6rpx;
+}
+.chat-type-tag--song_audit    { background: #edf0ff; color: #4a60d4; }
+.chat-type-tag--certification { background: #fff3e0; color: #e8963e; }
+.chat-type-tag--copyright     { background: #ffeaea; color: #d44; }
+.chat-type-tag--system        { background: #e6f3ef; color: #3a8; }
+
+/* ---- 关联操作卡片 ---- */
+.chat-action-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 28rpx;
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 24rpx 28rpx;
+  box-shadow: 0 1rpx 3rpx rgba(0, 0, 0, 0.06);
+}
+.chat-action-card:active { background: #f8f8f8; }
+
+.chat-action-left {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.chat-action-icon-img {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 14rpx;
+  flex-shrink: 0;
+}
+
+.chat-action-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.chat-action-title {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #333;
+}
+
+.chat-action-sub {
+  font-size: 22rpx;
+  color: #999;
+}
+
+.chat-action-arrow {
+  font-size: 32rpx;
+  color: #ccc;
+}

@@ -1,0 +1,365 @@
+<!-- pages/distribution/distribution.wxml -->
+<!-- 页面容器 -->
+<view class="page-container" style="{{pageStyle}}">
+  
+  <!-- 绑定提示（新客扫码进入时显示） -->
+  <view class="bind-tip-section" wx:if="{{bindTip.show}}">
+    <view class="bind-tip-content">
+      <image class="referrer-avatar" src="{{bindTip.referrerAvatar}}" mode="aspectFill"></image>
+      <view class="bind-tip-text">
+        <text class="bind-tip-title">欢迎来到河狸家！</text>
+        <text class="bind-tip-desc">你是通过 {{bindTip.referrerName}} 的推荐进入的~</text>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 股东申请入口（非股东显示） -->
+  <view class="apply-section" wx:if="{{!isShareholder}}">
+    <view class="apply-card">
+      <text class="apply-title">成为共享股东</text>
+      <text class="apply-desc">分享专属推广码，好友消费你拿10%储值金</text>
+      <button class="apply-btn" bindtap="applyShareholder">立即申请</button>
+    </view>
+  </view>
+  <!-- 顶部用户信息区 -->
+  <view class="user-info-section">
+    <view class="user-info-wrapper">
+      <view class="user-left">
+        <view class="avatar-wrapper">
+          <image class="avatar" src="{{userInfo.avatar}}" mode="aspectFill"></image>
+        </view>
+        <view class="user-main">
+          <view class="nickname-row">
+            <text class="nickname">{{userInfo.nickname}}</text>
+            <text class="level-badge {{shareholderInfo.levelClass}}">{{shareholderInfo.levelName}}</text>
+          </view>
+          <text class="upgrade-tip" wx:if="{{shareholderInfo.nextLevel}}">再推{{shareholderInfo.needAmount}}元升级{{shareholderInfo.nextLevel}}</text>
+        </view>
+      </view>
+      <button class="qrcode-btn" bindtap="goToPromotionCode">
+        <text class="qrcode-icon"></text>
+        <text class="qrcode-text">推广码</text>
+      </button>
+    </view>
+  </view>
+
+  <!-- 储值金卡片 -->
+  <view class="funds-card">
+    <view class="funds-header">
+      <text class="funds-label">储值金余额（元）</text>
+      <text class="help-icon" bindtap="showBalanceRule">?</text>
+    </view>
+    <view class="funds-amount-row">
+      <view class="amount-wrapper" bindtap="viewBalanceLog">
+        <text class="funds-amount">{{balance.available}}</text>
+        <text class="amount-arrow">  ›</text>
+      </view>
+      <button class="withdraw-btn" bindtap="goConsume">去消费</button>
+    </view>
+    <view class="funds-stats">
+      <view class="funds-stat-item">
+        <text class="stat-label">累计佣金(元)</text>
+        <text class="stat-value">{{balance.totalCommission}}</text>
+      </view>
+      <view class="funds-stat-item">
+        <text class="stat-label">已使用(元)</text>
+        <text class="stat-value">{{balance.used}}</text>
+      </view>
+      <view class="funds-stat-item">
+        <text class="stat-label">快过期(元)</text>
+        <text class="stat-value expiring">{{balance.expiring}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 推广业绩 -->
+  <view class="order-income-section">
+    <view class="section-header">
+      <view class="section-title">推广业绩</view>
+      <view class="section-more" bindtap="viewReferralList">查看全部 ›</view>
+    </view>
+    <view class="tab-bar">
+      <view class="tab-item {{incomeTab === 'today' ? 'active' : ''}}" bindtap="switchIncomeTab" data-tab="today">今日</view>
+      <view class="tab-item {{incomeTab === 'yesterday' ? 'active' : ''}}" bindtap="switchIncomeTab" data-tab="yesterday">昨日</view>
+      <view class="tab-item {{incomeTab === 'week' ? 'active' : ''}}" bindtap="switchIncomeTab" data-tab="week">近七天</view>
+      <view class="tab-item {{incomeTab === 'month' ? 'active' : ''}}" bindtap="switchIncomeTab" data-tab="month">本月</view>
+    </view>
+    
+    <!-- 业绩概览 -->
+    <view class="performance-overview">
+      <view class="overview-item">
+        <text class="overview-num">{{performanceData.newCustomers}}</text>
+        <text class="overview-label">新增客户</text>
+      </view>
+      <view class="overview-divider"></view>
+      <view class="overview-item">
+        <text class="overview-num">{{performanceData.orders}}</text>
+        <text class="overview-label">推广订单</text>
+      </view>
+      <view class="overview-divider"></view>
+      <view class="overview-item">
+        <text class="overview-num highlight">¥{{performanceData.commissionAmount}}</text>
+        <text class="overview-label">获得返佣</text>
+      </view>
+    </view>
+    
+    <!-- 推广明细列表 -->
+    <view class="referral-list" wx:if="{{referralDetailList.length > 0}}">
+      <view class="referral-item" wx:for="{{referralDetailList}}" wx:key="orderId">
+        <view class="referral-left">
+          <text class="referral-name">{{item.customerName}}</text>
+          <text class="referral-service">{{item.serviceName}}</text>
+        </view>
+        <view class="referral-center">
+          <text class="referral-amount">¥{{item.orderAmount}}</text>
+          <text class="referral-time">{{item.orderTime}}</text>
+        </view>
+        <view class="referral-right">
+          <text class="commission-amount">+¥{{item.commissionAmount}}</text>
+          <text class="commission-rate">{{item.commissionRate}}%返佣</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 股东等级 -->
+  <view class="level-section">
+    <view class="section-header">
+      <view class="section-title">股东等级</view>
+      <view class="section-more" bindtap="showLevelInfo">等级说明 ›</view>
+    </view>
+    <view class="level-list">
+      <view class="level-item {{item.level === shareholderInfo.levelClass ? 'active' : ''}}" wx:for="{{levelConfig}}" wx:key="level">
+        <view class="level-left">
+          <text class="level-name">{{item.name}}</text>
+          <text class="level-condition">{{item.condition}}</text>
+        </view>
+        <view class="level-right">
+          <text class="level-rate">{{item.rate}}%</text>
+          <text class="level-benefits">{{item.benefits}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 股东排行榜 -->
+  <view class="rank-section">
+    <view class="section-header">
+      <view class="section-title">分销榜单</view>
+    </view>
+    
+    <!-- 分类榜单Tab切换 -->
+    <view class="rank-tabs">
+      <view 
+        class="rank-tab {{rankTab === 'commission' ? 'active' : ''}}" 
+        bindtap="switchRankTab" 
+        data-tab="commission"
+      >
+        <text class="rank-tab-text">佣金榜单</text>
+      </view>
+      <view 
+        class="rank-tab {{rankTab === 'referrer' ? 'active' : ''}}" 
+        bindtap="switchRankTab" 
+        data-tab="referrer"
+      >
+        <text class="rank-tab-text">推广人榜单</text>
+      </view>
+    </view>
+    
+    <!-- 排行榜列表 -->
+    <view class="rank-list">
+      <view class="rank-item" wx:for="{{rankList}}" wx:key="rank">
+        <!-- 左侧：排名图标 + 头像 + 昵称 -->
+        <view class="rank-left">
+          <!-- 排名图标（奖牌样式 - CSS实现） -->
+          <view class="rank-medal {{item.rank <= 3 ? 'top' : ''}}">
+            <view class="medal-crown" wx:if="{{item.rank <= 3}}">
+              <text class="crown-text">👑</text>
+            </view>
+            <view class="medal-circle {{item.rank === 1 ? 'gold' : item.rank === 2 ? 'silver' : item.rank === 3 ? 'bronze' : ''}}">
+              <text class="medal-num" wx:if="{{item.rank > 3}}">{{item.rank}}</text>
+              <text class="medal-icon-text" wx:else>{{item.rank}}</text>
+            </view>
+          </view>
+          
+          <!-- 用户头像 -->
+          <image class="rank-avatar" src="{{item.avatar}}" mode="aspectFill"></image>
+          
+          <!-- 用户昵称 -->
+          <text class="rank-name">{{item.nickname}}{{item.isMe ? '(我)' : ''}}</text>
+        </view>
+        
+        <!-- 右侧：金额/人数 -->
+        <view class="rank-right">
+          <text class="rank-amount" wx:if="{{rankTab === 'commission'}}">¥{{item.totalAmount}}</text>
+          <text class="rank-amount" wx:else>{{item.referralCount}}人</text>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 完整榜单按钮 -->
+    <view class="rank-more-btn" bindtap="viewRankList">
+      <text class="rank-more-text">完整榜单 ›</text>
+    </view>
+  </view>
+
+  <!-- 推荐规则说明 -->
+  <view class="rule-section">
+    <view class="section-title">共享股东规则</view>
+    <view class="rule-list">
+      <view class="rule-item">
+        <text class="rule-dot">•</text>
+        <text class="rule-text">分享专属推广码，好友扫码即自动绑定关系</text>
+      </view>
+      <view class="rule-item">
+        <text class="rule-dot">•</text>
+        <text class="rule-text">好友首次消费即可获得{{shareholderInfo.commissionRate}}%储值金返佣</text>
+      </view>
+      <view class="rule-item">
+        <text class="rule-dot">•</text>
+        <text class="rule-text">储值金仅限本店消费抵扣，不可提现</text>
+      </view>
+      <view class="rule-item">
+        <text class="rule-dot">•</text>
+        <text class="rule-text">储值金有效期{{shareholderInfo.balanceExpireDays}}天，到期前7天提醒</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部占位 -->
+  <view class="footer-placeholder"></view>
+</view>
+
+<!-- 推广码弹窗（原有） -->
+<view class="promotion-modal {{showPromotionModal ? 'active' : ''}}" wx:if="{{showPromotionModal}}">
+  <view class="modal-mask" bindtap="closePromotionModal"></view>
+
+  <!-- 弹窗主体容器 -->
+  <view class="modal-wrapper">
+  <!-- 关闭按钮（弹窗右上角外侧） -->
+  <view class="modal-close-btn" bindtap="closePromotionModal">
+    <view class="close-icon-line close-icon-line-1"></view>
+    <view class="close-icon-line close-icon-line-2"></view>
+  </view>
+
+  <view class="modal-content" catchtap="">
+    <!-- 波浪装饰层 -->
+    <view class="modal-wave-bg"></view>
+
+    <!-- 顶部品牌与标题区 -->
+    <view class="modal-header">
+      <view class="modal-brand-row">
+        <image class="modal-shop-logo" src="{{shopInfo.logoUrl}}" mode="aspectFill"></image>
+        <text class="modal-shop-name">{{shopInfo.shopName}}</text>
+      </view>
+      <view class="modal-activity-name">{{shopInfo.activityName}}</view>
+      <view class="modal-slogan">{{shopInfo.slogan}}</view>
+    </view>
+
+    <!-- 白色邀请卡片 -->
+    <view class="modal-card">
+      <view class="invite-info">
+        <view class="invite-user-row">
+          <image class="invite-avatar" src="{{userInfo.avatar}}" mode="aspectFill"></image>
+          <text class="invite-nickname">{{userInfo.nickname}}</text>
+        </view>
+        <text class="invite-slogan">邀请你成为共享股东</text>
+      </view>
+      <view class="qrcode-container">
+        <image class="qrcode-image" src="{{promotionCode.qrCodeUrl}}" mode="aspectFit"></image>
+      </view>
+    </view>
+
+    <!-- 操作步骤指引 -->
+    <view class="steps-section">
+      <view class="step-item" wx:for="{{promotionSteps}}" wx:key="index">
+        <view class="step-icon-wrap">
+          <view class="step-icon step-icon-{{item.icon}}"></view>
+        </view>
+        <text class="step-text">{{item.text}}</text>
+        <view class="step-arrow" wx:if="{{index < promotionSteps.length - 1}}"></view>
+      </view>
+    </view>
+  </view>
+  </view>
+
+  <!-- 底部分享区域 -->
+  <view class="share-area-outside">
+    <view class="share-title-wrapper">
+      <view class="share-title-line"></view>
+      <text class="share-title">分享至</text>
+      <view class="share-title-line"></view>
+    </view>
+
+    <view class="share-buttons-row">
+      <button class="share-btn-wechat" open-type="share" bindtap="shareToWechat">
+        <view class="wechat-icon-css"></view>
+        <text class="wechat-text">去微信邀请朋友</text>
+      </button>
+
+      <button class="share-btn-circle-item" bindtap="shareToMoments">
+        <view class="circle-icon moments-icon">
+          <view class="moments-icon-css"></view>
+        </view>
+        <text class="circle-label">微信朋友圈</text>
+      </button>
+
+      <button class="share-btn-circle-item" bindtap="copyPromotionLink">
+        <view class="circle-icon link-icon">
+          <view class="link-icon-css"></view>
+        </view>
+        <text class="circle-label">复制链接</text>
+      </button>
+
+      <button class="share-btn-circle-item" bindtap="savePromotionCode">
+        <view class="circle-icon save-icon">
+          <view class="save-icon-css"></view>
+        </view>
+        <text class="circle-label">保存推广码</text>
+      </button>
+    </view>
+  </view>
+</view>
+
+<!-- ==================== 欢迎弹窗（首次进入弹出） ==================== -->
+<view class="welcome-modal-overlay" wx:if="{{showWelcomeModal}}" bindtap="closeWelcomeModal">
+  <view class="welcome-modal-wrapper" catchtap="stopPropagation">
+    
+    <!-- 关闭按钮 -->
+    <view class="welcome-close-btn" bindtap="closeWelcomeModal">
+      <text class="welcome-close-text">×</text>
+    </view>
+    
+    <!-- 弹窗主体 -->
+    <view class="welcome-modal-body">
+      
+      <!-- 插画区域 -->
+      <view class="welcome-illustration">
+        <image 
+          class="welcome-illustration-img" 
+          src="{{welcomeIllustrationSrc}}" 
+          mode="aspectFit"
+        />
+      </view>
+      
+      <!-- 文字区域 -->
+      <view class="welcome-text-area">
+        <view class="welcome-title">开启优享生活</view>
+        <view class="welcome-subtitle">在这个中秋节享受折扣，随遇而安</view>
+      </view>
+      
+      <!-- CTA 按钮 -->
+      <view class="welcome-cta-btn" bindtap="onWelcomeCtaTap">
+        <text class="welcome-cta-text">立即出发</text>
+      </view>
+      
+    </view>
+    
+    <!-- 折叠角 -->
+    <view class="welcome-folded-corner"></view>
+    
+    <!-- 底部阴影 -->
+    <view class="welcome-paper-shadow"></view>
+    
+  </view>
+</view>

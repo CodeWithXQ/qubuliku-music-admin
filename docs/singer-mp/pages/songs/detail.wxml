@@ -1,0 +1,32 @@
+<view class="page-container detail-page" wx:if="{{song}}">
+  <!-- 封面区 -->
+  <view class="section" style="text-align:center;padding:48rpx">
+    <image style="width:240rpx;height:240rpx;border-radius:24rpx;box-shadow:0 8rpx 32rpx rgba(0,0,0,0.15)" src="{{song.coverUrl}}" mode="aspectFill" />
+    <text style="font-size:38rpx;font-weight:700;color:var(--text-dark);display:block;margin-top:24rpx">{{song.title}}</text>
+    <view style="font-size:24rpx;color:var(--text-dim);margin-top:12rpx">
+      <text>专辑：{{song.album || '未命名'}} · {{song.style || '未知'}} · {{song.duration || 0}}秒</text>
+    </view>
+    <view class="song-status status-{{song.auditStatus}}" style="margin-top:16rpx;display:inline-block">{{auditLabel(song.auditStatus)}}</view>
+  </view>
+
+  <!-- 数据面板 -->
+  <view class="section">
+    <view style="display:flex;justify-content:space-between;text-align:center">
+      <view style="flex:1"><text style="font-size:var(--font-xl);font-weight:800;display:block;font-family:'SF Mono',monospace">{{fmtWan(song.playCount)}}</text><text style="font-size:var(--font-xs);color:var(--text-dim)">播放量</text></view>
+      <view style="flex:1"><text style="font-size:var(--font-xl);font-weight:800;display:block;font-family:'SF Mono',monospace">{{song.favoriteCount || 0}}</text><text style="font-size:var(--font-xs);color:var(--text-dim)">收藏数</text></view>
+      <view style="flex:1"><text style="font-size:var(--font-xl);font-weight:800;display:block;font-family:'SF Mono',monospace">{{song.releaseDate || '未设置'}}</text><text style="font-size:var(--font-xs);color:var(--text-dim)">发行日期</text></view>
+    </view>
+  </view>
+
+  <!-- 版权信息 -->
+  <view class="section" wx:if="{{copyright}}">
+    <text class="section-title" style="margin-bottom:0">版权信息</text>
+    <view class="info-row"><text class="info-label">版权状态</text><text class="info-value">{{copyrightLabel(copyright.status)}}</text></view>
+    <view class="info-row" wx:if="{{copyright.company}}"><text class="info-label">版权公司</text><text class="info-value">{{copyright.company}}</text></view>
+    <view class="info-row" wx:if="{{copyright.licenseStart}}"><text class="info-label">授权期限</text><text class="info-value">{{copyright.licenseStart}} ~ {{copyright.licenseEnd || '永久'}}</text></view>
+  </view>
+
+  <view wx:if="{{song.auditStatus === 2}}" style="padding:20rpx">
+    <button class="submit-btn" bindtap="onResubmit" loading="{{resubmitting}}">重新提交审核</button>
+  </view>
+</view>

@@ -1,0 +1,133 @@
+<!--pages/distribution/rank-list/rank-list.wxml-->
+<!-- 页面容器 -->
+<view class="page-container">
+  
+  <!-- 顶部标题区 -->
+  <view class="header-section">
+    <text class="header-title">股东排行榜</text>
+    <text class="header-subtitle">实时更新的推广业绩排名</text>
+  </view>
+
+  <!-- 分类榜单Tab切换 -->
+  <view class="rank-tabs">
+    <view 
+      class="rank-tab {{rankTab === 'commission' ? 'active' : ''}}" 
+      bindtap="switchRankTab" 
+      data-tab="commission"
+    >
+      <text class="rank-tab-text">佣金榜单</text>
+    </view>
+    <view 
+      class="rank-tab {{rankTab === 'referrer' ? 'active' : ''}}" 
+      bindtap="switchRankTab" 
+      data-tab="referrer"
+    >
+      <text class="rank-tab-text">推广人榜单</text>
+    </view>
+  </view>
+
+  <!-- 前三名领奖台 -->
+  <view class="podium-section" wx:if="{{topThree.length > 0}}">
+    <!-- 第二名 -->
+    <view class="podium-item second" wx:if="{{topThree[1]}}">
+      <view class="podium-medal">
+        <view class="medal-circle silver">
+          <text class="medal-icon-text">2</text>
+        </view>
+      </view>
+      <image class="podium-avatar" src="{{topThree[1].avatar}}" mode="aspectFill"></image>
+      <text class="podium-name">{{topThree[1].nickname}}</text>
+      <text class="podium-amount" wx:if="{{rankTab === 'commission'}}">¥{{topThree[1].totalAmount}}</text>
+      <text class="podium-amount" wx:else>{{topThree[1].referralCount}}人</text>
+    </view>
+    
+    <!-- 第一名 -->
+    <view class="podium-item first" wx:if="{{topThree[0]}}">
+      <view class="podium-crown">
+        <text class="crown-text">👑</text>
+      </view>
+      <view class="podium-medal">
+        <view class="medal-circle gold">
+          <text class="medal-icon-text">1</text>
+        </view>
+      </view>
+      <image class="podium-avatar" src="{{topThree[0].avatar}}" mode="aspectFill"></image>
+      <text class="podium-name">{{topThree[0].nickname}}</text>
+      <text class="podium-amount" wx:if="{{rankTab === 'commission'}}">¥{{topThree[0].totalAmount}}</text>
+      <text class="podium-amount" wx:else>{{topThree[0].referralCount}}人</text>
+    </view>
+    
+    <!-- 第三名 -->
+    <view class="podium-item third" wx:if="{{topThree[2]}}">
+      <view class="podium-medal">
+        <view class="medal-circle bronze">
+          <text class="medal-icon-text">3</text>
+        </view>
+      </view>
+      <image class="podium-avatar" src="{{topThree[2].avatar}}" mode="aspectFill"></image>
+      <text class="podium-name">{{topThree[2].nickname}}</text>
+      <text class="podium-amount" wx:if="{{rankTab === 'commission'}}">¥{{topThree[2].totalAmount}}</text>
+      <text class="podium-amount" wx:else>{{topThree[2].referralCount}}人</text>
+    </view>
+  </view>
+
+  <!-- 排行榜列表 -->
+  <view class="rank-list-section">
+    <view class="section-header">
+      <text class="section-title">完整榜单</text>
+      <text class="update-time">更新时间：{{updateTime}}</text>
+    </view>
+    
+    <view class="rank-list">
+      <view 
+        class="rank-item {{item.isMe ? 'my-rank' : ''}}" 
+        wx:for="{{rankList}}" 
+        wx:key="rank"
+        wx:if="{{item.rank > 3}}"
+      >
+        <!-- 左侧：排名 + 头像 + 昵称 -->
+        <view class="rank-left">
+          <!-- 排名数字 -->
+          <view class="rank-number">
+            <text class="rank-num-text">{{item.rank}}</text>
+          </view>
+          
+          <!-- 用户头像 -->
+          <image class="rank-avatar" src="{{item.avatar}}" mode="aspectFill"></image>
+          
+          <!-- 用户昵称 -->
+          <view class="rank-info">
+            <text class="rank-name">{{item.nickname}}{{item.isMe ? '(我)' : ''}}</text>
+            <text class="rank-level" wx:if="{{item.levelName}}">{{item.levelName}}</text>
+          </view>
+        </view>
+        
+        <!-- 右侧：金额/人数 -->
+        <view class="rank-right">
+          <text class="rank-amount" wx:if="{{rankTab === 'commission'}}">¥{{item.totalAmount}}</text>
+          <text class="rank-amount" wx:else>{{item.referralCount}}人</text>
+          <text class="rank-label" wx:if="{{rankTab === 'commission'}}">累计佣金</text>
+          <text class="rank-label" wx:else>推广人数</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <view class="empty-state" wx:if="{{rankList.length === 0 && !loading}}">
+      <text class="empty-icon">🏆</text>
+      <text class="empty-text">暂无排行数据</text>
+      <text class="empty-tip">成为共享股东，参与推广即可获得排名</text>
+    </view>
+
+    <!-- 加载中 -->
+    <view class="loading-more" wx:if="{{loading}}">
+      <text class="loading-text">加载中...</text>
+    </view>
+
+    <!-- 没有更多 -->
+    <view class="no-more" wx:if="{{!hasMore && rankList.length > 0}}">
+      <text class="no-more-text">没有更多了</text>
+    </view>
+  </view>
+
+</view>

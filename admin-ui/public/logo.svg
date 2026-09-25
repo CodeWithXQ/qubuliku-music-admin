@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
+  <defs>
+    <linearGradient id="logoGrad" x1="0" y1="0" x2="32" y2="32">
+      <stop offset="0%" stop-color="#2563EB"/>
+      <stop offset="100%" stop-color="#3B82F6"/>
+    </linearGradient>
+  </defs>
+  <!-- 圆角方形背景 -->
+  <rect x="1" y="1" width="30" height="30" rx="8" fill="url(#logoGrad)"/>
+  <!-- 音乐符号：音符头部（圆形） -->
+  <circle cx="11" cy="20" r="4.5" fill="white"/>
+  <!-- 音符竖线 -->
+  <line x1="15.5" y1="20" x2="15.5" y2="6" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- 音符旗 -->
+  <path d="M15.5 6 C15.5 6, 21 7.5, 22 10" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  <!-- 右侧音波纹 -->
+  <line x1="25" y1="14" x2="25" y2="20" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.8"/>
+  <line x1="28" y1="10" x2="28" y2="22" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+</svg>

@@ -1,0 +1,65 @@
+<view class="page-container dashboard">
+  <!-- 歌手头部（深色区域） -->
+  <view class="header-card">
+    <view class="header-left">
+      <image class="header-avatar" src="{{singerInfo.avatar}}" mode="aspectFill" />
+      <view>
+        <text class="header-name">{{singerInfo.name}}</text>
+        <view class="level-badge" style="margin-top:6rpx">
+          {{singerInfo.certStatus === 2 ? '已认证' : singerInfo.certStatus === 1 ? '待认证' : '入驻中'}}
+        </view>
+      </view>
+    </view>
+    <view style="padding-right:30rpx" bindtap="goProfile">
+      <text style="font-size:24rpx;color:var(--gold);background:var(--dark-card);padding:10rpx 22rpx;border-radius:var(--radius-xl)">编辑</text>
+    </view>
+  </view>
+
+  <!-- 认证提示 -->
+  <view wx:if="{{showCertTip}}" class="cert-tip" bindtap="goCertification">
+    <text>⚠️ {{singerInfo.certStatus === 3 ? '认证已被驳回：' + singerInfo.certRemark : '认证审核中，完善资料可加速审核'}}</text>
+    <text class="cert-tip-link">{{singerInfo.certStatus === 3 ? '重新提交' : '查看详情'}} →</text>
+  </view>
+
+  <!-- 统计卡片（深色卡片） -->
+  <view class="section-dark">
+    <text style="font-size:26rpx;color:var(--gold);margin-bottom:20rpx;display:block">数据概览</text>
+    <view class="stat-grid">
+      <view class="stat-card"><text class="stat-num">{{displaySongCount}}</text><text class="stat-label">我的歌曲</text></view>
+      <view class="stat-card"><text class="stat-num">{{displayPlayCount}}</text><text class="stat-label">总播放量</text></view>
+      <view class="stat-card"><text class="stat-num">{{displayFollowerCount}}</text><text class="stat-label">粉丝数</text></view>
+      <view class="stat-card" bindtap="goSongs"><text class="stat-num warning">{{pendingCount}}</text><text class="stat-label">待审核歌曲</text></view>
+    </view>
+  </view>
+
+  <!-- 快捷操作 -->
+  <view class="action-grid">
+    <view class="action-item" bindtap="goUpload"><text class="action-icon">🎵</text><text class="action-text">上传歌曲</text></view>
+    <view class="action-item" bindtap="goSongs"><text class="action-icon">📋</text><text class="action-text">歌曲管理</text></view>
+    <view class="action-item" bindtap="goCertification"><text class="action-icon">✅</text><text class="action-text">认证中心</text></view>
+    <view class="action-item" bindtap="goStats"><text class="action-icon">📊</text><text class="action-text">数据看板</text></view>
+  </view>
+
+  <!-- 最新歌曲 -->
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">最新歌曲</text>
+      <text class="section-more" bindtap="goSongs">全部 ›</text>
+    </view>
+    <block wx:if="{{latestSongs.length === 0}}">
+      <view class="empty">暂无歌曲，快去上传第一首吧 🎵</view>
+    </block>
+    <block wx:for="{{latestSongs}}" wx:key="id">
+      <view class="song-row" bindtap="goSongs">
+        <image class="song-cover" src="{{item.coverUrl}}" mode="aspectFill" />
+        <view class="song-info">
+          <text class="song-title">{{item.title}}</text>
+          <text class="song-sub">播放 {{fmtWan(item.playCount)}} · {{auditLabel(item.auditStatus)}}</text>
+        </view>
+        <view class="song-status status-{{item.auditStatus}}">{{auditLabel(item.auditStatus)}}</view>
+      </view>
+    </block>
+  </view>
+
+  <view class="footer-placeholder"></view>
+</view>

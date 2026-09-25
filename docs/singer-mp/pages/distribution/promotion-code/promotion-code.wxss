@@ -1,0 +1,301 @@
+/* pages/distribution/promotion-code/promotion-code.wxss */
+/* ==================== 全局基础样式 ==================== */
+page {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  background: #1a1a1a;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  overflow-x: hidden;
+}
+
+/* ==================== 小程序button全局重置 ==================== */
+button {
+  padding: 0;
+  margin: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  line-height: inherit;
+  font-size: inherit;
+  color: inherit;
+  text-align: inherit;
+  box-sizing: border-box;
+  border-radius: 0;
+}
+button::after {
+  border: none;
+}
+
+/* ==================== 页面容器 ==================== */
+.page-container {
+  min-height: 100vh;
+  padding: 30rpx;
+  padding-bottom: 60rpx;
+}
+
+/* ==================== 顶部提示区 ==================== */
+.tip-section {
+  display: flex;
+  align-items: flex-start;
+  gap: 16rpx;
+  padding: 24rpx;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 16rpx;
+  margin-bottom: 30rpx;
+}
+
+.tip-icon {
+  font-size: 36rpx;
+  flex-shrink: 0;
+}
+
+.tip-text {
+  flex: 1;
+  font-size: 26rpx;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.6;
+}
+
+/* ==================== 推广码卡片 ==================== */
+.qrcode-card {
+  background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%);
+  border-radius: 24rpx;
+  padding: 40rpx 30rpx;
+  margin-bottom: 30rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.3);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30rpx;
+}
+
+.card-title {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.card-subtitle {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: "SF Mono", "Menlo", "Consolas", monospace;
+}
+
+.qrcode-wrapper {
+  width: 100%;
+  aspect-ratio: 1;
+  max-width: 500rpx;
+  margin: 0 auto 30rpx;
+  background: #ffffff;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.qrcode-canvas {
+  position: absolute;
+  opacity: 0;
+}
+
+.qrcode-image {
+  width: 100%;
+  height: 100%;
+}
+
+.qrcode-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.placeholder-icon {
+  font-size: 120rpx;
+  opacity: 0.3;
+}
+
+.placeholder-text {
+  font-size: 28rpx;
+  color: #999999;
+}
+
+.card-footer {
+  text-align: center;
+}
+
+.footer-text {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* ==================== 分享链接区 ==================== */
+.share-link-section {
+  background: #2a2a2a;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin-bottom: 30rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 20rpx;
+}
+
+.link-box {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 20rpx;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 12rpx;
+}
+
+.link-text {
+  flex: 1;
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.7);
+  word-break: break-all;
+  font-family: "SF Mono", "Menlo", "Consolas", monospace;
+}
+
+.copy-btn {
+  padding: 12rpx 28rpx;
+  background: linear-gradient(135deg, #f5d98e 0%, #e8c56d 100%);
+  border-radius: 20rpx;
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #333333;
+  flex-shrink: 0;
+}
+
+.copy-btn:active {
+  opacity: 0.8;
+  transform: scale(0.96);
+}
+
+/* ==================== 快捷分享按钮区 ==================== */
+.share-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20rpx;
+  margin-bottom: 30rpx;
+}
+
+.share-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  padding: 30rpx 20rpx;
+  background: #2a2a2a;
+  border-radius: 20rpx;
+  transition: all 0.3s ease;
+}
+
+.share-btn:active {
+  transform: scale(0.95);
+  opacity: 0.8;
+}
+
+.btn-icon {
+  font-size: 48rpx;
+}
+
+.btn-text {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
+}
+
+.share-btn.wechat {
+  background: linear-gradient(135deg, #07c160 0%, #06ad56 100%);
+}
+
+.share-btn.wechat .btn-text {
+  color: #ffffff;
+}
+
+.share-btn.moments {
+  background: linear-gradient(135deg, #ff9500 0%, #e68600 100%);
+}
+
+.share-btn.moments .btn-text {
+  color: #ffffff;
+}
+
+.share-btn.save {
+  background: linear-gradient(135deg, #5856d6 0%, #4a48c4 100%);
+}
+
+.share-btn.save .btn-text {
+  color: #ffffff;
+}
+
+/* ==================== 推广数据统计 ==================== */
+.promo-stats-section {
+  background: #ffffff;
+  border-radius: 24rpx;
+  padding: 30rpx;
+  margin-bottom: 30rpx;
+}
+
+.promo-stats-section .section-title {
+  color: #333333;
+}
+
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20rpx;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10rpx;
+  padding: 20rpx;
+  background: #f5f5f5;
+  border-radius: 16rpx;
+}
+
+.stat-num {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #333333;
+  font-family: "SF Mono", "Menlo", "Consolas", monospace;
+}
+
+.stat-label {
+  font-size: 22rpx;
+  color: #999999;
+}
+
+/* ==================== 底部提示 ==================== */
+.bottom-tip {
+  padding: 24rpx;
+  background: rgba(255, 193, 7, 0.1);
+  border-radius: 16rpx;
+  border: 1rpx solid rgba(255, 193, 7, 0.2);
+}
+
+.tip-content {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.6;
+}

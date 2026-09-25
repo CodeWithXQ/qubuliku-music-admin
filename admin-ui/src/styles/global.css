@@ -1,0 +1,260 @@
+/* ============ 全局重置与基础样式 ============ */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-family);
+  background: var(--gray-100);
+  color: var(--gray-800);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+#app {
+  height: 100%;
+}
+
+/* ============ 滚动条 ============ */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--gray-300);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-400);
+}
+
+/* ============ 工具类 ============ */
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.text-ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.text-muted {
+  color: var(--gray-400);
+}
+
+/* ============ 标签样式 ============ */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.tag-blue {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.tag-green {
+  background: rgba(16, 185, 129, 0.12);
+  color: var(--success);
+}
+
+.tag-orange {
+  background: rgba(245, 158, 11, 0.12);
+  color: var(--warning);
+}
+
+.tag-red {
+  background: rgba(239, 68, 68, 0.10);
+  color: var(--danger);
+}
+
+.tag-gray {
+  background: var(--gray-100);
+  color: var(--gray-500);
+}
+
+.tag-purple {
+  background: rgba(88, 146, 134, 0.12);
+  color: #589286;
+}
+
+/* ============ 主题色 #589286 全覆盖 ============ */
+/* Element Plus 主色强制覆盖 */
+:root {
+  --el-color-primary: #589286 !important;
+  --el-color-primary-light-3: #EEF5F4 !important;
+  --el-color-primary-light-5: #9CC7C0 !important;
+  --el-color-primary-light-7: #C5DEDA !important;
+  --el-color-primary-light-9: #E2EEEC !important;
+  --el-color-primary-dark-2: #4a7d73 !important;
+}
+
+/* 实心按钮 — 添加/创建 */
+.el-button--primary {
+  --el-button-bg-color: #589286 !important;
+  --el-button-border-color: #589286 !important;
+  --el-button-text-color: #fff !important;
+  background-color: #589286 !important;
+  border-color: #589286 !important;
+}
+
+.el-button--primary:hover,
+.el-button--primary:focus {
+  --el-button-hover-bg-color: #4a7d73 !important;
+  --el-button-hover-border-color: #4a7d73 !important;
+  background-color: #4a7d73 !important;
+  border-color: #4a7d73 !important;
+}
+
+/* 文字按钮 — 编辑 */
+.el-button--primary.is-text {
+  color: #589286 !important;
+  background: transparent !important;
+}
+
+.el-button--primary.is-text:hover,
+.el-button--primary.is-text:focus {
+  color: #4a7d73 !important;
+}
+
+/* 朴素按钮 — 批量操作 */
+.el-button--primary.is-plain {
+  --el-button-text-color: #589286 !important;
+  color: #589286 !important;
+  border-color: #589286 !important;
+  background: rgba(88, 146, 134, 0.08) !important;
+}
+
+/* 链接按钮 */
+.el-button--primary.is-link {
+  color: #589286 !important;
+}
+
+/* 卡片标题图标 */
+.card-title .el-icon {
+  color: #589286 !important;
+}
+
+/* 分页激活 */
+.el-pagination .el-pager li.is-active {
+  background-color: #589286 !important;
+  color: #fff !important;
+}
+
+/* 选中行 */
+.el-table__body tr.current-row > td {
+  background-color: rgba(88, 146, 134, 0.06) !important;
+}
+
+
+/* ============ 页面切换动画 ============ */
+.page-fade-enter-active,
+.page-fade-leave-active {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.page-fade-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+.page-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+/* ============ 统计卡片 ============ */
+.stat-card {
+  background: #fff;
+  border-radius: var(--card-radius);
+  padding: 18px 20px;
+  box-shadow: var(--card-shadow);
+  border: 1px solid rgba(0, 0, 0, 0.02);
+  cursor: pointer;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.09);
+}
+
+.stat-card .label {
+  font-size: 13px;
+  color: var(--gray-500);
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.stat-card .number {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--gray-800);
+  letter-spacing: -0.5px;
+}
+
+.stat-card .sub {
+  font-size: 12px;
+  color: var(--gray-400);
+  margin-top: 4px;
+}
+
+/* ============ 表格增强 ============ */
+.data-table-wrapper {
+  background: #fff;
+  border-radius: var(--card-radius);
+  box-shadow: var(--card-shadow);
+  padding: 20px 24px;
+}
+
+/* ============ 图片错误占位 ============ */
+.img-error {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gray-100);
+  color: var(--gray-400);
+  font-size: 12px;
+  border-radius: inherit;
+}
+
+/* ============ 响应式 ============ */
+@media (max-width: 1200px) {
+  .row-overview {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 56px !important;
+  }
+  .row-overview {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}

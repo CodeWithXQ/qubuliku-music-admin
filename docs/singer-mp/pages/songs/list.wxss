@@ -1,0 +1,76 @@
+/* pages/songs/list — 筛选栏 = distribution 胶囊样式 */
+
+.songs-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #1a1a1a 0%, #1a1a1a 0rpx, #1a1a1a 160rpx, #f5f5f7 360rpx, #f5f5f7 100%);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* 筛选栏 — 复制 distribution tab 样式 */
+.songs-filter {
+  display: flex;
+  margin: 0 24rpx;
+  background: #fff7ec;
+  border-radius: 50rpx;
+  padding: 6rpx;
+  gap: 0;
+}
+
+.songs-filter-item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14rpx 0;
+  border-radius: 50rpx;
+  background: transparent;
+  font-size: 24rpx;
+  color: #999;
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.songs-filter-item.active {
+  background: #fed17c;
+  color: #333;
+  font-weight: 600;
+  box-shadow: 0 4rpx 12rpx rgba(254, 209, 124, 0.4);
+  transform: scale(1.02);
+}
+
+/* 歌曲数 */
+.songs-count {
+  text-align: center;
+  font-size: 24rpx;
+  color: #999;
+  padding: 16rpx 0 4rpx;
+}
+
+/* 内联上传按钮 */
+.songs-upload-btn {
+  display: inline-block;
+  padding: 14rpx 36rpx;
+  background: #1a1a1a;
+  color: #fff;
+  border-radius: 30rpx;
+  font-size: 24rpx;
+  border: none;
+}
+.songs-upload-btn::after { border: none; }
+
+/* FAB */
+.songs-fab {
+  position: fixed;
+  bottom: 140rpx;
+  right: 36rpx;
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 50%;
+  background: #1a1a1a;
+  box-shadow: 0 6rpx 24rpx rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99;
+}
+.songs-fab:active { transform: scale(0.9); }

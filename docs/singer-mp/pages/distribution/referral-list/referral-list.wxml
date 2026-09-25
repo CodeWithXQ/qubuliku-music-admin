@@ -1,0 +1,104 @@
+<!--pages/distribution/referral-list/referral-list.wxml-->
+<view class="page-container">
+  
+  <!-- 顶部统计卡片 -->
+  <view class="stats-card">
+    <view class="stats-title">推广业绩总览</view>
+    <view class="stats-grid">
+      <view class="stat-item">
+        <text class="stat-value highlight">{{stats.newCustomers}}</text>
+        <text class="stat-label">新增客户</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-value highlight">{{stats.totalOrders}}</text>
+        <text class="stat-label">推广订单</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-value">¥{{stats.orderAmount}}</text>
+        <text class="stat-label">消费总额</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-value gold">¥{{stats.commissionAmount}}</text>
+        <text class="stat-label">返佣总额</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- Tab筛选栏 -->
+  <view class="tab-bar">
+    <view 
+      class="tab-item {{currentTab === item.key ? 'active' : ''}}" 
+      wx:for="{{tabs}}" 
+      wx:key="key"
+      data-tab="{{item.key}}"
+      bindtap="switchTab"
+    >
+      <text class="tab-text">{{item.name}}</text>
+    </view>
+  </view>
+
+  <!-- 推广明细列表 -->
+  <view class="referral-list">
+    <view 
+      class="referral-item" 
+      wx:for="{{referralList}}" 
+      wx:key="id"
+      data-order-id="{{item.orderId}}"
+      bindtap="viewOrderDetail"
+    >
+      <!-- 左侧：服务图片 -->
+      <view class="service-image-wrapper">
+        <image class="service-image" src="{{item.serviceImage}}" mode="aspectFill"></image>
+        <view class="status-badge {{item.status}}">{{item.statusText}}</view>
+      </view>
+
+      <!-- 中间：订单信息 -->
+      <view class="order-info">
+        <view class="customer-row">
+          <image class="customer-avatar" src="{{item.customerAvatar}}" mode="aspectFill"></image>
+          <text class="customer-name">{{item.customerName}}</text>
+          <text class="order-time">{{item.orderTime}}</text>
+        </view>
+        
+        <view class="service-row">
+          <text class="service-name">{{item.serviceName}}</text>
+          <text class="order-id">订单号：{{item.orderId}}</text>
+        </view>
+      </view>
+
+      <!-- 右侧：金额信息 -->
+      <view class="amount-info">
+        <view class="commission-row">
+          <text class="commission-label">返佣</text>
+          <text class="commission-amount">+¥{{item.commissionAmount}}</text>
+        </view>
+        <view class="rate-badge">{{item.commissionRate}}%</view>
+        <view class="order-amount-row">
+          <text class="order-amount-label">消费</text>
+          <text class="order-amount">¥{{item.orderAmount}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <view class="empty-state" wx:if="{{referralList.length === 0 && !loading}}">
+      <text class="empty-icon">📊</text>
+      <text class="empty-text">暂无推广记录</text>
+      <text class="empty-tip">分享推广码，邀请好友消费即可获得返佣</text>
+    </view>
+
+    <!-- 加载中 -->
+    <view class="loading-more" wx:if="{{loading}}">
+      <text class="loading-text">加载中...</text>
+    </view>
+
+    <!-- 没有更多 -->
+    <view class="no-more" wx:if="{{!hasMore && referralList.length > 0}}">
+      <text class="no-more-text">没有更多了</text>
+    </view>
+  </view>
+
+</view>

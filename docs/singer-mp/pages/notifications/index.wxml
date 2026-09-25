@@ -1,0 +1,41 @@
+<view class="msg-page">
+  <!-- 空状态 -->
+  <view wx:if="{{notifications.length === 0 && !loading}}" class="msg-empty">
+    <image class="msg-empty-img" src="/images/余音绕梁Logo设计.png" mode="aspectFit" />
+    <text class="msg-empty-title">暂无消息</text>
+    <text class="msg-empty-desc">歌曲审核、认证状态变更等通知会出现在这里</text>
+  </view>
+
+  <!-- 消息列表 -->
+  <view class="msg-list" wx:if="{{notifications.length > 0}}">
+    <block wx:for="{{notifications}}" wx:key="id">
+      <view
+        class="msg-card {{item.isRead ? '' : 'msg-card--unread'}}"
+        data-item="{{item}}"
+        bindtap="onTapItem"
+      >
+        <!-- 左侧头像区 -->
+        <view class="msg-avatar msg-avatar--{{item.type}}">
+          <image class="msg-avatar-img" src="/images/余音绕梁Logo设计.png" mode="aspectFill" />
+        </view>
+
+        <!-- 中间内容 -->
+        <view class="msg-info">
+          <view class="msg-top">
+            <text class="msg-title">{{item.title}}</text>
+            <view wx:if="{{!item.isRead}}" class="msg-dot"></view>
+          </view>
+          <text class="msg-desc">{{item.content}}</text>
+          <view class="msg-bottom">
+            <text class="msg-tag msg-tag--{{item.type}}">{{typeLabel(item.type)}}</text>
+            <text class="msg-time">{{formatTime(item.createdAt)}}</text>
+          </view>
+        </view>
+      </view>
+    </block>
+  </view>
+
+  <view wx:if="{{loading}}" class="msg-loading">
+    <text>加载中…</text>
+  </view>
+</view>

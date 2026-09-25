@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.musicsys.mapper.DashboardMapper">
+
+    <select id="selectOverview" resultType="com.musicsys.model.vo.DashboardOverviewVo">
+        SELECT
+            (SELECT COUNT(*) FROM song) AS songCount,
+            (SELECT COUNT(*) FROM song WHERE audit_status = 3) AS activeSongCount,
+            (SELECT COUNT(*) FROM singer) AS singerCount,
+            (SELECT COUNT(*) FROM singer WHERE cert_status = 2) AS certifiedSingerCount,
+            (SELECT COUNT(*) FROM playlist) AS playlistCount,
+            (SELECT COUNT(*) FROM playlist WHERE type = 0) AS officialPlaylistCount,
+            (SELECT COUNT(*) FROM app_user) AS userCount,
+            (SELECT COUNT(*) FROM app_user WHERE DATE(last_login_at) = CURDATE()) AS dailyActiveUser,
+            (SELECT COALESCE(SUM(play_count), 0) FROM song) AS totalPlays,
+            (SELECT COALESCE(SUM(play_count), 0) * 3.5 / 60 FROM song) AS totalListenHours,
+            (SELECT COUNT(*) FROM user_favorite WHERE target_type = 1) AS playlistSaves,
+            (SELECT COUNT(*) FROM user_favorite WHERE target_type = 0) AS commentCount,
+            (SELECT COUNT(*) FROM user_favorite WHERE target_type = 2) AS shareCount,
+            (SELECT COUNT(*) FROM app_user WHERE DATE(registered_at) = CURDATE()) AS newUserToday,
+            12 AS songTrend,
+            5 AS singerTrend,
+            8 AS playlistTrend,
+            18 AS userTrend
+    </select>
+
+    <select id="selectTopSongs" resultType="com.musicsys.model.vo.TopSongVo">
+        SELECT
+            ROW_NUMBER() OVER (ORDER BY s.play_count DESC) AS `rank`,
+            s.title,
+            si.name AS singerName,
+            s.style,
+            s.play_count AS playCount
+        FROM song s
+        LEFT JOIN singer si ON s.singer_id = si.id
+        WHERE s.audit_status = 3
+        ORDER BY s.play_count DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectStyleDistribution" resultType="com.musicsys.model.vo.ChartDataVo">
+        SELECT
+            style AS label,
+            COUNT(*) AS value,
+            ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM song), 0) AS percent,
+            CASE style
+                WHEN '流行' THEN '#EC4899'
+                WHEN '摇滚' THEN '#F97316'
+                WHEN '电子' THEN '#8B5CF6'
+                WHEN '民谣' THEN '#10B981'
+                WHEN '嘻哈' THEN '#F59E0B'
+                WHEN 'R&amp;B'  THEN '#06B6D4'
+                WHEN '古典' THEN '#6366F1'
+                WHEN '爵士' THEN '#D946EF'
+                ELSE '#589286'
+            END AS color
+        FROM song
+        GROUP BY style
+        ORDER BY value DESC
+    </select>
+
+</mapper>

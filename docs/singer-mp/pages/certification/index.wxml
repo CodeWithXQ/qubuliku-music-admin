@@ -1,0 +1,49 @@
+<view class="page-container cert-page">
+  <!-- 当前状态（深色卡片） -->
+  <view class="section-dark" style="text-align:center;padding:60rpx">
+    <text style="font-size:90rpx;display:block;margin-bottom:20rpx">{{certStatus === 2 ? '✅' : certStatus === 1 ? '⏳' : certStatus === 3 ? '❌' : '📝'}}</text>
+    <text style="font-size:36rpx;font-weight:700;color:var(--gold);display:block">{{certStatus === 2 ? '已认证' : certStatus === 1 ? '审核中' : certStatus === 3 ? '已驳回' : '未提交'}}</text>
+    <text wx:if="{{certRemark}}" style="font-size:24rpx;color:var(--warning);margin-top:16rpx;display:block;line-height:1.6">驳回原因：{{certRemark}}</text>
+  </view>
+
+  <!-- 认证流程 -->
+  <view class="section">
+    <text class="section-title" style="margin-bottom:28rpx">认证流程</text>
+    <view style="display:flex;align-items:center;justify-content:center;gap:12rpx;margin-bottom:8rpx">
+      <view style="display:flex;flex-direction:column;align-items:center;gap:8rpx" class="{{certStatus >= 0 ? 'flow-done' : ''}}">
+        <view style="width:52rpx;height:52rpx;border-radius:50%;background:{{certStatus>=0?'var(--gold-dark)':'var(--gray-light)'}};color:{{certStatus>=0?'var(--text-dark)':'var(--text-dim)'}};font-size:24rpx;font-weight:700;display:flex;align-items:center;justify-content:center;transition:all 0.3s">1</view>
+        <text style="font-size:20rpx;color:{{certStatus>=0?'var(--gold-dark)':'var(--text-dim)'}}">完善资料</text>
+      </view>
+      <text style="color:var(--gray-border);margin-bottom:30rpx">→</text>
+      <view style="display:flex;flex-direction:column;align-items:center;gap:8rpx">
+        <view style="width:52rpx;height:52rpx;border-radius:50%;background:{{certStatus>=1?'var(--gold-dark)':'var(--gray-light)'}};color:{{certStatus>=1?'var(--text-dark)':'var(--text-dim)'}};font-size:24rpx;font-weight:700;display:flex;align-items:center;justify-content:center;transition:all 0.3s">2</view>
+        <text style="font-size:20rpx;color:{{certStatus>=1?'var(--gold-dark)':'var(--text-dim)'}}">提交审核</text>
+      </view>
+      <text style="color:var(--gray-border);margin-bottom:30rpx">→</text>
+      <view style="display:flex;flex-direction:column;align-items:center;gap:8rpx">
+        <view style="width:52rpx;height:52rpx;border-radius:50%;background:{{certStatus>=2?'var(--gold-dark)':'var(--gray-light)'}};color:{{certStatus>=2?'var(--text-dark)':'var(--text-dim)'}};font-size:24rpx;font-weight:700;display:flex;align-items:center;justify-content:center;transition:all 0.3s">3</view>
+        <text style="font-size:20rpx;color:{{certStatus>=2?'var(--gold-dark)':'var(--text-dim)'}}">平台审核</text>
+      </view>
+      <text style="color:var(--gray-border);margin-bottom:30rpx">→</text>
+      <view style="display:flex;flex-direction:column;align-items:center;gap:8rpx">
+        <view style="width:52rpx;height:52rpx;border-radius:50%;background:var(--gray-light);color:var(--text-dim);font-size:24rpx;font-weight:700;display:flex;align-items:center;justify-content:center">4</view>
+        <text style="font-size:20rpx;color:var(--text-dim)">认证通过</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 认证权益 -->
+  <view class="section">
+    <text class="section-title" style="margin-bottom:16rpx">认证权益</text>
+    <view style="display:flex;align-items:center;gap:12rpx;padding:14rpx 0;font-size:var(--font)"><text style="color:var(--success);font-size:var(--font)">✅</text><text>歌曲上架对用户可见</text></view>
+    <view style="display:flex;align-items:center;gap:12rpx;padding:14rpx 0;font-size:var(--font)"><text style="color:var(--success);font-size:var(--font)">✅</text><text>获得"已认证"标识</text></view>
+    <view style="display:flex;align-items:center;gap:12rpx;padding:14rpx 0;font-size:var(--font)"><text style="color:var(--success);font-size:var(--font)">✅</text><text>优先推荐位展示</text></view>
+    <view style="display:flex;align-items:center;gap:12rpx;padding:14rpx 0;font-size:var(--font)"><text style="color:var(--success);font-size:var(--font)">✅</text><text>专属数据看板</text></view>
+  </view>
+
+  <view wx:if="{{certStatus === 0 || certStatus === 3}}" style="padding:20rpx">
+    <button wx:if="{{certStatus === 3}}" class="submit-btn" bindtap="onResubmit" loading="{{submitting}}">重新提交认证</button>
+    <button wx:else class="submit-btn" bindtap="goProfile">去完善资料</button>
+  </view>
+  <view class="footer-placeholder"></view>
+</view>

@@ -1,0 +1,5 @@
+/* pages/dashboard — 设计基准页面（基于 distribution 规范）*/
+/* 所有样式复用 app.wxss 全局 class，仅微调 */
+.dashboard .header-avatar { width: 100rpx; height: 100rpx; }
+.dashboard .header-name { font-size: 34rpx; }
+.dashboard .song-cover { width: 80rpx; height: 80rpx; }

@@ -1,0 +1,393 @@
+/* pages/distribution/rank-list/rank-list.wxss */
+/* ==================== 全局基础样式 ==================== */
+page {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  background: transparent;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  overflow-x: hidden;
+}
+
+/* ==================== 页面容器 ==================== */
+.page-container {
+  min-height: 100vh;
+  padding-bottom: 40rpx;
+  background: linear-gradient(180deg, #1b1b1b 0%, #ffffff 35%);
+}
+
+/* ==================== 顶部标题区 ==================== */
+.header-section {
+  padding: 40rpx 30rpx 30rpx;
+  text-align: center;
+  color: #ffffff;
+}
+
+.header-title {
+  display: block;
+  font-size: 48rpx;
+  font-weight: 700;
+  color: #fcf1c0;
+  margin-bottom: 12rpx;
+}
+
+.header-subtitle {
+  display: block;
+  font-size: 26rpx;
+  color: rgba(252, 241, 192, 0.7);
+}
+
+/* ==================== 分类榜单Tab切换 ==================== */
+.rank-tabs {
+  display: flex;
+  gap: 0;
+  margin: 0 30rpx 30rpx;
+  background: #fff7ec;
+  border-radius: 50rpx;
+  padding: 6rpx;
+}
+
+.rank-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12rpx 0;
+  border-radius: 50rpx;
+  background: transparent;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.rank-tab.active {
+  background: #fed17c;
+  box-shadow: 0 4rpx 12rpx rgba(254, 209, 124, 0.4);
+  transform: scale(1.02);
+}
+
+.rank-tab-text {
+  font-size: 28rpx;
+  color: #999999;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.rank-tab.active .rank-tab-text {
+  color: #333333;
+  font-weight: 600;
+}
+
+/* ==================== 前三名领奖台 ==================== */
+.podium-section {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 20rpx;
+  padding: 40rpx 30rpx;
+  margin: 0 30rpx 30rpx;
+  background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%);
+  border-radius: 24rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.4);
+}
+
+.podium-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12rpx;
+  position: relative;
+}
+
+/* 第一名（最高） */
+.podium-item.first {
+  order: 2;
+  padding-bottom: 0;
+}
+
+/* 第二名 */
+.podium-item.second {
+  order: 1;
+  padding-bottom: 40rpx;
+}
+
+/* 第三名 */
+.podium-item.third {
+  order: 3;
+  padding-bottom: 60rpx;
+}
+
+/* 皇冠 */
+.podium-crown {
+  position: absolute;
+  top: -30rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+}
+
+.crown-text {
+  font-size: 40rpx;
+  filter: drop-shadow(0 4rpx 8rpx rgba(0, 0, 0, 0.3));
+}
+
+/* 奖牌 */
+.podium-medal {
+  width: 80rpx;
+  height: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.medal-circle {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e8e8e8;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.2);
+}
+
+/* 金牌 */
+.medal-circle.gold {
+  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%);
+  box-shadow: 0 6rpx 24rpx rgba(255, 215, 0, 0.5),
+              0 0 0 6rpx rgba(255, 215, 0, 0.15);
+}
+
+/* 银牌 */
+.medal-circle.silver {
+  background: linear-gradient(135deg, #c0c0c0 0%, #e8e8e8 50%, #c0c0c0 100%);
+  box-shadow: 0 6rpx 24rpx rgba(192, 192, 192, 0.5),
+              0 0 0 6rpx rgba(192, 192, 192, 0.15);
+}
+
+/* 铜牌 */
+.medal-circle.bronze {
+  background: linear-gradient(135deg, #cd7f32 0%, #daa06d 50%, #cd7f32 100%);
+  box-shadow: 0 6rpx 24rpx rgba(205, 127, 50, 0.5),
+              0 0 0 6rpx rgba(205, 127, 50, 0.15);
+}
+
+.medal-icon-text {
+  font-size: 36rpx;
+  font-weight: 800;
+  color: #ffffff;
+  text-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.3);
+}
+
+/* 头像 */
+.podium-avatar {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 50%;
+  border: 4rpx solid #fcf1c0;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.3);
+}
+
+/* 昵称 */
+.podium-name {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #fcf1c0;
+  max-width: 140rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+}
+
+/* 金额/人数 */
+.podium-amount {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #fed17c;
+  font-family: "SF Mono", "Menlo", "Consolas", monospace;
+}
+
+/* ==================== 排行榜列表区域 ==================== */
+.rank-list-section {
+  margin: 0 30rpx;
+  background: #ffffff;
+  border-radius: 24rpx;
+  padding: 30rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.08);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24rpx;
+  padding-bottom: 20rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #333333;
+}
+
+.update-time {
+  font-size: 22rpx;
+  color: #999999;
+}
+
+/* ==================== 排行榜列表 ==================== */
+.rank-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.rank-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx;
+  background: #f8f8f8;
+  border-radius: 16rpx;
+  transition: all 0.3s ease;
+}
+
+/* 自己的排名高亮 */
+.rank-item.my-rank {
+  background: linear-gradient(135deg, #fff7ec 0%, #fff 100%);
+  border: 2rpx solid #fed17c;
+  box-shadow: 0 4rpx 16rpx rgba(254, 209, 124, 0.2);
+}
+
+/* 左侧：排名 + 头像 + 昵称 */
+.rank-left {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  flex: 1;
+  min-width: 0;
+}
+
+/* 排名数字 */
+.rank-number {
+  width: 56rpx;
+  height: 56rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.rank-num-text {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #999999;
+  font-family: "SF Mono", "Menlo", "Consolas", monospace;
+}
+
+/* 用户头像 */
+.rank-avatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 2rpx solid #f0f0f0;
+}
+
+/* 用户信息 */
+.rank-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+  flex: 1;
+  min-width: 0;
+}
+
+.rank-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #333333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rank-level {
+  font-size: 22rpx;
+  color: #999999;
+}
+
+/* 右侧：金额/人数 */
+.rank-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6rpx;
+  flex-shrink: 0;
+  margin-left: 20rpx;
+}
+
+.rank-amount {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #333333;
+  font-family: "SF Mono", "Menlo", "Consolas", monospace;
+}
+
+.rank-label {
+  font-size: 22rpx;
+  color: #999999;
+}
+
+/* ==================== 空状态 ==================== */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 120rpx 0;
+  gap: 16rpx;
+}
+
+.empty-icon {
+  font-size: 120rpx;
+  opacity: 0.3;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: #999999;
+}
+
+.empty-tip {
+  font-size: 24rpx;
+  color: #cccccc;
+  text-align: center;
+  max-width: 400rpx;
+}
+
+/* ==================== 加载状态 ==================== */
+.loading-more {
+  padding: 40rpx 0;
+  text-align: center;
+}
+
+.loading-text {
+  font-size: 24rpx;
+  color: #999999;
+}
+
+.no-more {
+  padding: 40rpx 0;
+  text-align: center;
+}
+
+.no-more-text {
+  font-size: 24rpx;
+  color: #cccccc;
+}

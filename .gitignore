@@ -1,0 +1,41 @@
+# 敏感信息
+.env
+.env.*
+!.env.example
+.claude/
+*.local.json
+application-local.yml
+
+# Java
+target/
+*.class
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+.m2repo/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+__pycache__/
+
+# 前端
+node_modules/
+dist/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# 系统垃圾
+__MACOSX/
+.DS_Store
+
+# 日志与临时文件
+*.log
+
+# 课程作业文档（office）
+*.docx
+*.xlsx

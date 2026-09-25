@@ -1,0 +1,55 @@
+<view class="page-container profile-page">
+  <!-- 头像头部区 -->
+  <view style="display:flex;flex-direction:column;align-items:center;padding:60rpx 20rpx 48rpx">
+    <image class="profile-avatar-img" src="{{profile.avatar}}" mode="aspectFill" bindtap="{{editing ? 'chooseAvatar' : ''}}" />
+    <view style="display:flex;align-items:center;justify-content:center;gap:12rpx;margin-top:24rpx" wx:if="{{!editing}}">
+      <text style="font-size:38rpx;font-weight:700;color:var(--gold)">{{profile.name}}</text>
+      <view class="level-badge">{{profile.certStatus === 2 ? '已认证' : profile.certStatus === 1 ? '待认证' : profile.certStatus === 3 ? '已驳回' : '入驻中'}}</view>
+    </view>
+    <view wx:else style="margin-top:24rpx">
+      <input style="font-size:34rpx;text-align:center;border-bottom:3rpx solid var(--gold);width:320rpx;padding:8rpx 0;color:var(--gold)" value="{{profile.name}}" data-field="name" bindinput="onInput" placeholder="歌手名称" />
+    </view>
+  </view>
+
+  <!-- 查看模式 -->
+  <block wx:if="{{!editing}}">
+    <view class="section">
+      <view class="info-row"><text class="info-label">音乐风格</text><text class="info-value">{{profile.style || '未设置'}}</text></view>
+      <view class="info-row"><text class="info-label">手机号</text><text class="info-value">{{profile.phone || '未绑定'}}</text></view>
+      <view class="info-row"><text class="info-label">认证状态</text><text class="info-value" style="color:{{profile.certStatus===2?'var(--success)':profile.certStatus===3?'var(--danger)':'var(--text-dim)'}}">{{profile.certStatus === 2 ? '✅ 已认证' : profile.certStatus === 1 ? '⏳ 待认证' : profile.certStatus === 3 ? '❌ 已驳回' : '入驻中'}}</text></view>
+      <view class="info-row" wx:if="{{profile.intro}}"><text class="info-label">简介</text><text class="info-value" style="line-height:1.6;font-size:24rpx">{{profile.intro}}</text></view>
+      <view class="info-row" wx:if="{{profile.socialLinks}}"><text class="info-label">社交链接</text><text class="info-value">{{profile.socialLinks}}</text></view>
+    </view>
+    <view class="section" style="padding:0">
+      <view style="display:flex;justify-content:space-between;align-items:center;padding:28rpx 28rpx;border-bottom:1rpx solid var(--gray-light);font-size:30rpx" bindtap="enableEdit"><text>✏️ 编辑资料</text><text style="color:var(--text-dim)">→</text></view>
+      <view style="display:flex;justify-content:space-between;align-items:center;padding:28rpx 28rpx;font-size:30rpx" bindtap="goCertification"><text>✅ 认证中心</text><text style="color:var(--text-dim)">→</text></view>
+    </view>
+  </block>
+
+  <!-- 编辑模式 -->
+  <block wx:else>
+    <view class="section">
+      <view class="info-row"><text class="info-label">音乐风格</text>
+        <picker mode="selector" range="{{styleList}}" value="{{styleIndex}}" bindchange="onStyleChange">
+          <text class="info-value" style="color:var(--primary)">{{styleList[styleIndex] || '请选择'}}</text>
+        </picker>
+      </view>
+      <view class="info-row"><text class="info-label">简介</text>
+        <textarea style="width:100%;min-height:120rpx;font-size:26rpx;text-align:right;color:var(--text-dark)" value="{{profile.intro}}" data-field="intro" bindinput="onInput" placeholder="介绍你自己..." maxlength="200" />
+      </view>
+      <view class="info-row"><text class="info-label">社交链接</text>
+        <input style="font-size:26rpx;text-align:right;flex:1;color:var(--text-dark)" value="{{profile.socialLinks}}" data-field="socialLinks" bindinput="onInput" placeholder="微博,抖音,小红书 逗号分隔" />
+      </view>
+    </view>
+    <view class="btn-group">
+      <button class="profile-save-btn" bindtap="onSave" loading="{{saving}}">保存修改</button>
+      <button class="profile-cancel-btn" bindtap="cancelEdit">取消</button>
+    </view>
+  </block>
+
+  <!-- 退出登录 -->
+  <view style="padding:60rpx 20rpx">
+    <button class="profile-logout-btn" bindtap="logout">退出登录</button>
+  </view>
+  <view class="footer-placeholder"></view>
+</view>

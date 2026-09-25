@@ -1,0 +1,34 @@
+<view class="songs-page">
+  <!-- 筛选栏（复制 distribution 胶囊样式） -->
+  <view class="songs-filter">
+    <view class="songs-filter-item {{filter === '' ? 'active' : ''}}" data-filter="" bindtap="onFilterChange">全部</view>
+    <view class="songs-filter-item {{filter === '0' ? 'active' : ''}}" data-filter="0" bindtap="onFilterChange">待审核</view>
+    <view class="songs-filter-item {{filter === '3' ? 'active' : ''}}" data-filter="3" bindtap="onFilterChange">已上架</view>
+    <view class="songs-filter-item {{filter === '4' ? 'active' : ''}}" data-filter="4" bindtap="onFilterChange">已下架</view>
+    <view class="songs-filter-item {{filter === '2' ? 'active' : ''}}" data-filter="2" bindtap="onFilterChange">已驳回</view>
+  </view>
+
+  <view class="songs-count">共 {{total}} 首歌曲</view>
+
+  <view class="section" wx:for="{{songs}}" wx:key="id" style="margin:0 24rpx 12rpx">
+    <view class="song-row" bindtap="goDetail" data-id="{{item.id}}">
+      <image class="song-cover" src="{{item.coverUrl}}" mode="aspectFill" />
+      <view class="song-info">
+        <text class="song-title">{{item.title}}</text>
+        <text class="song-sub">{{item.album || '未命名专辑'}} · 播放 {{fmtWan(item.playCount)}}</text>
+      </view>
+      <view class="song-status status-{{item.auditStatus}}">{{auditLabel(item.auditStatus)}}</view>
+    </view>
+  </view>
+
+  <view wx:if="{{loading}}" class="empty">加载中...</view>
+  <view wx:elif="{{songs.length === 0}}" class="empty">
+    <text style="font-size:60rpx;display:block;margin-bottom:12rpx">🎵</text>
+    <text>暂无歌曲</text>
+    <view style="margin-top:20rpx">
+      <button class="songs-upload-btn" bindtap="goUpload">上传第一首歌</button>
+    </view>
+  </view>
+
+  <view class="songs-fab" bindtap="goUpload"><text style="font-size:44rpx;color:#fff">+</text></view>
+</view>
