@@ -6,24 +6,24 @@
 
 ## 技术栈
 
-| 层级 | 技术 | 版本 |
-|------|------|------|
-| 前端框架 | Vue 3 (Composition API) + TypeScript | 3.4+ |
-| 构建工具 | Vite | 5.3+ |
-| UI 组件库 | Element Plus | 2.7+ |
-| 可视化 | ECharts + Vue-ECharts | 5.5 / 6.7 |
-| 状态管理 | Pinia + pinia-plugin-persistedstate | 2.1 |
-| 路由 | Vue Router | 4.4 |
-| HTTP 客户端 | Axios | 1.7 |
-| CSS 方案 | SCSS + UnoCSS | — |
-| 后端框架 | Spring Boot | 3.3.5 |
-| 安全 | Spring Security + JWT (jjwt 0.12) | 6.x |
-| ORM | MyBatis-Plus + XML Mapper | 3.5.7 |
-| 数据库 | MySQL | 8.0 |
-| 缓存 | Redis（缓存三件套 + 秒杀扣库存） | 7 |
-| API 文档 | SpringDoc OpenAPI (Swagger) | 2.6 |
-| 工具库 | Hutool / Lombok / EasyExcel | 5.8 / 1.18 / 3.3 |
-| Java | JDK | 21 |
+| 层级       | 技术                                   | 版本               |
+| -------- | ------------------------------------ | ---------------- |
+| 前端框架     | Vue 3 (Composition API) + TypeScript | 3.4+             |
+| 构建工具     | Vite                                 | 5.3+             |
+| UI 组件库   | Element Plus                         | 2.7+             |
+| 可视化      | ECharts + Vue-ECharts                | 5.5 / 6.7        |
+| 状态管理     | Pinia + pinia-plugin-persistedstate  | 2.1              |
+| 路由       | Vue Router                           | 4.4              |
+| HTTP 客户端 | Axios                                | 1.7              |
+| CSS 方案   | SCSS + UnoCSS                        | —                |
+| 后端框架     | Spring Boot                          | 3.3.5            |
+| 安全       | Spring Security + JWT (jjwt 0.12)    | 6.x              |
+| ORM      | MyBatis-Plus + XML Mapper            | 3.5.7            |
+| 数据库      | MySQL                                | 8.0              |
+| 缓存       | Redis（缓存三件套 + 秒杀扣库存）                 | 7                |
+| API 文档   | SpringDoc OpenAPI (Swagger)          | 2.6              |
+| 工具库      | Hutool / Lombok / EasyExcel          | 5.8 / 1.18 / 3.3 |
+| Java     | JDK                                  | 21               |
 
 ---
 
@@ -66,6 +66,7 @@ music_sys/
 ## 功能模块
 
 ### 仪表盘
+
 - 总览统计卡片：曲库总量 / 合作艺人 / 歌单总量 / 注册用户
 - 热门歌曲 TOP10 排行（支持跳转完整榜单）
 - 音乐风格播放量分布（8 种风格 × 多色柱状图）
@@ -73,6 +74,7 @@ music_sys/
 - 数据看板子页：播放趋势折线图 + 用户增长柱状图
 
 ### 歌手管理
+
 - 分页列表 + 关键词 / 风格 / 认证状态筛选
 - 新增 / 编辑 / 删除歌手
 - 认证状态流转：入驻中 → 待认证 → 已认证
@@ -81,6 +83,7 @@ music_sys/
 - CSV 导出
 
 ### 歌曲管理
+
 - 分页列表 + 多条件筛选（关键词 / 风格 / 审核状态）
 - 新增 / 编辑 / 删除歌曲
 - 本地上传封面图 + 音频文件
@@ -91,6 +94,7 @@ music_sys/
 - CSV 导出
 
 ### 歌单管理
+
 - 分页列表 + 类型 / 状态筛选
 - 新增 / 编辑 / 删除歌单
 - 本地上传封面图，创建者自动关联当前管理员
@@ -100,6 +104,7 @@ music_sys/
 - 官方歌单 & 用户歌单分类
 
 ### 用户管理
+
 - 分页列表 + 用户类型 / 状态筛选
 - 新增 / 编辑 / 删除终端用户
 - 启用 / 禁用账号
@@ -107,24 +112,28 @@ music_sys/
 - 用户类型：普通用户 / VIP 会员 / 音乐人
 
 ### 数据看板
+
 - 播放趋势（近 7 天 / 30 天，按风格对比）
 - 用户增长统计（新增 vs 活跃）
 - 热门歌曲排行
 - 总览统计
 
 ### 操作日志
+
 - 管理员操作全记录（登录 / 新增 / 编辑 / 删除 / 审核 / 导出）
 - 分页 + 操作类型 / 模块 / 结果筛选
 - 操作详情 & 请求参数快照
 - CSV 导出
 
 ### 个人中心
+
 - 个人信息查看 & 编辑（姓名 / 工号 / 部门 / 职务 / 邮箱 / 手机）
 - 头像更换（文字头像颜色选择器 / 网络图片链接）
 - 修改密码
 - 账号安全信息（最后登录 IP、时间）
 
 ### 秒杀模块
+
 - 限量数字专辑秒杀：Redis Lua 原子预扣 + DB 乐观扣减（`WHERE stock > 0`）双层防超卖
 - `setnx` 幂等：同一用户同一活动只允许成功一次
 - Redis 不可用时自动降级直查 / 直扣 DB，核心流程不断
@@ -135,11 +144,11 @@ music_sys/
 
 采用 **用户 — 角色 — 权限** 三级模型：
 
-| 角色 | 编码 | 权限范围 |
-|------|------|---------|
-| 超级管理员 | `admin` | 系统全部权限 |
-| 内容编辑 | `editor` | 歌手 / 歌曲 / 歌单 CRUD + 仪表盘 / 数据 / 用户查看 |
-| 审核员 | `auditor` | 歌曲审核 + 歌单审核 + 仪表盘 / 数据查看 |
+| 角色    | 编码        | 权限范围                                |
+| ----- | --------- | ----------------------------------- |
+| 超级管理员 | `admin`   | 系统全部权限                              |
+| 内容编辑  | `editor`  | 歌手 / 歌曲 / 歌单 CRUD + 仪表盘 / 数据 / 用户查看 |
+| 审核员   | `auditor` | 歌曲审核 + 歌单审核 + 仪表盘 / 数据查看            |
 
 - 前端：路由按 `meta.perm` 过滤，侧边栏菜单按权限显示
 - 后端：Spring Security Filter 链 + `@OperationLog` AOP 自动记录操作
@@ -150,14 +159,14 @@ music_sys/
 
 共 **17 张表**，分为六大模块：
 
-| 模块 | 表名 | 说明 |
-|------|------|------|
-| 权限 | `sys_user` / `sys_role` / `sys_permission` / `sys_user_role` / `sys_role_permission` | RBAC 五表 |
-| 业务 | `singer` / `song` / `song_copyright` / `playlist` / `playlist_song` | 核心业务 |
-| 用户 | `app_user` / `user_favorite` | 终端用户 |
-| 统计 | `song_play_stat` / `style_play_stat` | 数据统计 |
-| 日志 | `operation_log` / `recommendation_log` | 审计 & 推荐 |
-| 秒杀 | `seckill_activity` | 秒杀活动库存 |
+| 模块  | 表名                                                                                   | 说明      |
+| --- | ------------------------------------------------------------------------------------ | ------- |
+| 权限  | `sys_user` / `sys_role` / `sys_permission` / `sys_user_role` / `sys_role_permission` | RBAC 五表 |
+| 业务  | `singer` / `song` / `song_copyright` / `playlist` / `playlist_song`                  | 核心业务    |
+| 用户  | `app_user` / `user_favorite`                                                         | 终端用户    |
+| 统计  | `song_play_stat` / `style_play_stat`                                                 | 数据统计    |
+| 日志  | `operation_log` / `recommendation_log`                                               | 审计 & 推荐 |
+| 秒杀  | `seckill_activity`                                                                   | 秒杀活动库存  |
 
 **种子数据**：5 位管理员 · 30 位歌手 · 60 首歌曲 · 20 个歌单 · 50 个终端用户 · 30 条操作日志 · 8 种风格 7 天播放统计。
 
@@ -167,11 +176,11 @@ music_sys/
 
 ### Redis 缓存三大问题（落地于歌曲详情）
 
-| 问题 | 场景 | 方案 |
-|------|------|------|
-| 缓存穿透 | 查询不存在的歌曲 id | 空值缓存：结果为 null 时写 `__NULL__` 标记，短过期 60s |
-| 缓存击穿 | 热点歌曲 key 过期瞬间大量并发回源 | setnx 互斥锁：只放一个线程回源 DB，其余自旋等待 |
-| 缓存雪崩 | 大量 key 同一时刻集中过期 | 随机过期：实际 TTL = 基础 1800s + 随机偏移 |
+| 问题   | 场景                  | 方案                                     |
+| ---- | ------------------- | -------------------------------------- |
+| 缓存穿透 | 查询不存在的歌曲 id         | 空值缓存：结果为 null 时写 `__NULL__` 标记，短过期 60s |
+| 缓存击穿 | 热点歌曲 key 过期瞬间大量并发回源 | setnx 互斥锁：只放一个线程回源 DB，其余自旋等待           |
+| 缓存雪崩 | 大量 key 同一时刻集中过期     | 随机过期：实际 TTL = 基础 1800s + 随机偏移          |
 
 - 封装 `CacheService.getWithCache()` 通用模板，统一处理三件套 + Redis 异常降级（Redis 挂掉自动直查 DB）
 - 写操作（新增 / 编辑 / 删除 / 审核 / 上下架）后主动 `evict` 删除缓存，保证一致性
@@ -193,14 +202,18 @@ music_sys/
 
 ### 压测结果（自写 benchmark.py 复现）
 
-| 指标 | 结果 |
-|------|------|
-| 歌曲详情接口响应 | 冷缓存 28ms → 热缓存 20ms |
-| 缓存命中率 | 99.9% |
-| 热缓存 QPS | 794 req/s |
-| 秒杀并发 | 200 并发抢 100 库存，成功 100 单、DB 库存归零、无超卖 |
+| 指标      | 结果                                  |
+| ------- | ----------------------------------- |
+| 热缓存 QPS | 794~1195 req/s（实测，受本机负载影响）          |
+| 秒杀并发    | 200 并发抢 100 库存，成功 100 单、DB 库存归零、无超卖 |
+| 缓存价值    | 高并发吞吐 + 防击穿/穿透/雪崩（小数据量单次延迟优势不明显）    |
 
 > 复现方式：`python benchmark.py`（见仓库根目录），压测前需启动 Redis + MySQL + 后端。
+> 说明：库仅 59 首歌曲、主键查询，MySQL 单次查询 ~10ms 与 Redis 读取+反序列化相当，缓存核心价值是扛高并发 QPS + 保护 DB，而非降单次延迟。
+
+![歌曲详情缓存压测](images/歌曲详情缓存压测.png)
+
+![秒杀并发压测](images/秒杀并发压测.png)
 
 ### 踩坑记录
 
@@ -269,11 +282,11 @@ npm run dev
 
 ### 4. 登录
 
-| 账号 | 密码 | 角色 |
-|------|------|------|
+| 账号              | 密码         | 角色    |
+| --------------- | ---------- | ----- |
 | `zhangmingyuan` | `admin123` | 超级管理员 |
-| `wangxiaohua` | `admin123` | 内容编辑 |
-| `lishenwei` | `admin123` | 审核员 |
+| `wangxiaohua`   | `admin123` | 内容编辑  |
+| `lishenwei`     | `admin123` | 审核员   |
 
 ---
 
@@ -283,19 +296,19 @@ npm run dev
 
 **认证方式**：Bearer Token（JWT），登录获取，请求头 `Authorization: Bearer <token>`，有效期 24 小时。
 
-| 前缀 | 端点数 | 说明 |
-|------|:---:|------|
-| `/api/auth/*` | 3 | 登录 / 登出 / 用户信息 |
-| `/api/dashboard/*` | 3 | 仪表盘概览 / 热门歌曲 / 风格分布 |
-| `/api/singers/*` | 7 | 歌手 CRUD + 头像上传 + 导出 |
-| `/api/songs/*` | 14 | 歌曲 CRUD + 封面上传 / 音频上传 + 审核工作流 + 批量操作 + 导出 |
-| `/api/playlists/*` | 10 | 歌单 CRUD + 封面上传 + 审核 + 置顶 + 歌曲管理 |
-| `/api/users/*` | 8 | 终端用户 CRUD + 头像上传 + 状态管理 |
-| `/api/data/*` | 4 | 播放趋势 / 用户增长 / 热门歌曲 / 总览 |
-| `/api/logs/*` | 3 | 操作日志列表 / 导出 / 统计 |
-| `/api/system/*` | 3 | 个人资料 / 修改密码 / 偏好设置 |
-| `/api/recommend/*` | 3 | 推荐策略 / 推荐日志 / 推荐效果 |
-| `/api/seckill/*` | 2 | 秒杀下单 / 活动详情（已放行无需登录） |
+| 前缀                 | 端点数 | 说明                                        |
+| ------------------ |:---:| ----------------------------------------- |
+| `/api/auth/*`      | 3   | 登录 / 登出 / 用户信息                            |
+| `/api/dashboard/*` | 3   | 仪表盘概览 / 热门歌曲 / 风格分布                       |
+| `/api/singers/*`   | 7   | 歌手 CRUD + 头像上传 + 导出                       |
+| `/api/songs/*`     | 14  | 歌曲 CRUD + 封面上传 / 音频上传 + 审核工作流 + 批量操作 + 导出 |
+| `/api/playlists/*` | 10  | 歌单 CRUD + 封面上传 + 审核 + 置顶 + 歌曲管理           |
+| `/api/users/*`     | 8   | 终端用户 CRUD + 头像上传 + 状态管理                   |
+| `/api/data/*`      | 4   | 播放趋势 / 用户增长 / 热门歌曲 / 总览                   |
+| `/api/logs/*`      | 3   | 操作日志列表 / 导出 / 统计                          |
+| `/api/system/*`    | 3   | 个人资料 / 修改密码 / 偏好设置                        |
+| `/api/recommend/*` | 3   | 推荐策略 / 推荐日志 / 推荐效果                        |
+| `/api/seckill/*`   | 2   | 秒杀下单 / 活动详情（已放行无需登录）                      |
 
 ---
 
@@ -325,12 +338,12 @@ VITE_USE_MOCK=false
 
 系统主题色统一为 **#589286**（青瓷绿），可通过以下文件修改：
 
-| 文件 | 作用 |
-|------|------|
-| `admin-ui/src/styles/variables.scss` | CSS 变量定义 |
-| `admin-ui/src/styles/global.css` | Element Plus 组件覆盖 |
-| `admin-ui/src/styles/element-override.css` | 组件级样式覆盖 |
-| `admin-ui/uno.config.ts` | UnoCSS 原子类主题色 |
+| 文件                                         | 作用                |
+| ------------------------------------------ | ----------------- |
+| `admin-ui/src/styles/variables.scss`       | CSS 变量定义          |
+| `admin-ui/src/styles/global.css`           | Element Plus 组件覆盖 |
+| `admin-ui/src/styles/element-override.css` | 组件级样式覆盖           |
+| `admin-ui/uno.config.ts`                   | UnoCSS 原子类主题色     |
 
 ---
 
@@ -353,6 +366,7 @@ cd music-sys-server && mvn clean package -DskipTests  # 产出 Fat JAR
 ## 设计文档
 
 完整设计方案见项目根目录 `reademe` 文件，包含：
+
 - ER 核心关系图
 - 16 张表详细字段说明
 - REST API 全部端点定义（40+ 端点）
